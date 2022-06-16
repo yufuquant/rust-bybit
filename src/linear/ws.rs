@@ -133,7 +133,7 @@ pub enum PublicResponse<'a> {
     Trade(BaseResponse<'a, Vec<Trade<'a>>>),
     // InstrumentInfo
     Kline(BaseResponseWithTimestamp<'a, Vec<Kline<'a>>>),
-    Liquidation(BaseResponse<'a, Vec<Liquidation<'a>>>),
+    Liquidation(BaseResponse<'a, Liquidation<'a>>),
 }
 
 #[derive(Serialize, Debug)]
