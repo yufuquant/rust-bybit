@@ -6,10 +6,10 @@ fn main() {
     let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/realtime_public");
 
     let symbols = vec!["BTCUSDT".to_owned()];
-    client.subscribe_order_book_l2_25(&symbols);
+    // client.subscribe_order_book_l2_25(&symbols);
     // client.subscribe_order_book_l2_200(&symbols);
-    client.subscribe_trade(&symbols);
-    client.subscribe_kline(&symbols, "1");
+    // client.subscribe_trade(&symbols);
+    // client.subscribe_kline(&symbols, "1");
     client.subscribe_liquidation(&symbols);
 
     let callback = |res: PublicResponse| match res {

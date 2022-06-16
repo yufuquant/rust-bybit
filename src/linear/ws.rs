@@ -27,24 +27,24 @@ pub struct Response<'a, D> {
     #[serde(alias = "type")]
     pub res_type: &'a str,
     pub data: D,
-    pub cross_seq: u64,
-    pub timestamp_e6: u64,
+    pub cross_seq: &'a str,
+    pub timestamp_e6: &'a str,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct OrderBookItem<'a> {
     pub price: &'a str,
     pub symbol: &'a str,
-    pub id: u128,
+    pub id: &'a str,
     pub side: &'a str,
-    pub size: u64,
+    pub size: f64,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct OrderBookDeleteItem<'a> {
     pub price: &'a str,
     pub symbol: &'a str,
-    pub id: u128,
+    pub id: &'a str,
     pub side: &'a str,
 }
 
@@ -60,8 +60,8 @@ pub struct OrderBookDelta<'a> {
     pub delete: Vec<OrderBookDeleteItem<'a>>,
     pub update: Vec<OrderBookItem<'a>>,
     pub insert: Vec<OrderBookItem<'a>>,
-    #[serde(rename = "transactTimeE6")]
-    pub transact_time_e6: u64,
+    // #[serde(rename = "transactTimeE6")]
+    // pub transact_time_e6: u64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -71,13 +71,13 @@ pub struct Trade<'a> {
     // Direction of price change
     pub tick_direction: &'a str,
     // Order price
-    pub price: f64,
+    pub price: &'a str,
     // Position qty
     pub size: f64,
     // UTC time
     pub timestamp: &'a str,
     // Millisecond timestamp
-    pub trade_time_ms: u64,
+    pub trade_time_ms: &'a str,
     // Direction of taker
     pub side: &'a str,
     // Trade ID
@@ -130,10 +130,10 @@ pub enum PublicResponse<'a> {
     #[serde(borrow)]
     OrderBookL2Snapshot(Response<'a, OrderBookSnapshot<'a>>),
     OrderBookL2Delta(Response<'a, OrderBookDelta<'a>>),
-    Trade(BaseResponse<'a, Trade<'a>>),
+    Trade(BaseResponse<'a, Vec<Trade<'a>>>),
     // InstrumentInfo
-    Kline(BaseResponseWithTimestamp<'a, Kline<'a>>),
-    Liquidation(BaseResponse<'a, Liquidation<'a>>),
+    Kline(BaseResponseWithTimestamp<'a, Vec<Kline<'a>>>),
+    Liquidation(BaseResponse<'a, Vec<Liquidation<'a>>>),
 }
 
 #[derive(Serialize, Debug)]
@@ -229,7 +229,7 @@ impl PublicWebSocketApiClient {
 fn spawn_ping_thread(tx: Sender<String>) {
     thread::spawn(move || loop {
         let s30 = Duration::from_secs(30);
-        tx.send("{{\"op\":ping}}".into()).unwrap();
+        tx.send("{\"op\":\"ping\"}".into()).unwrap();
         thread::sleep(s30);
     });
 }
