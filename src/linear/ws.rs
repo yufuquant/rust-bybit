@@ -176,7 +176,7 @@ impl PublicWebSocketApiClient {
         self.subscribe("liquidation", symbols);
     }
 
-    pub fn run<Callback: Fn(PublicResponse)>(&self, callback: Callback) -> Result<()> {
+    pub fn run<Callback: FnMut(PublicResponse)>(&self, mut callback: Callback) -> Result<()> {
         let req = Url::parse(&self.uri).unwrap();
         let (mut ws, _) = connect(req).expect("Can't connect");
 
