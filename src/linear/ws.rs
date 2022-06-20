@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::util::*;
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -60,8 +61,6 @@ pub struct OrderBookDelta<'a> {
     pub delete: Vec<OrderBookDeleteItem<'a>>,
     pub update: Vec<OrderBookItem<'a>>,
     pub insert: Vec<OrderBookItem<'a>>,
-    // #[serde(rename = "transactTimeE6")]
-    // pub transact_time_e6: u64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -237,50 +236,60 @@ pub struct Position<'a> {
     // Side
     pub side: &'a str,
     // Position value
-    pub position_value: &'a str,
+    pub position_value: f64,
     // Average entry price
-    pub entry_price: &'a str,
+    pub entry_price: f64,
     // Liquidation price
-    pub liq_price: &'a str,
+    pub liq_price: f64,
     // Bankruptcy price
-    pub bust_price: &'a str,
+    pub bust_price: f64,
     // In Isolated Margin mode, the value is set by the user. In Cross Margin mode, the value is the max leverage at current risk level
-    pub leverage: &'a str,
+    pub leverage: f64,
     // Pre-occupied order margin
-    pub order_margin: &'a str,
+    pub order_margin: f64,
     // Position margin
-    pub position_margin: &'a str,
+    pub position_margin: f64,
     // Position closing fee occupied (your opening fee + expected maximum closing fee)
-    pub occ_closing_fee: &'a str,
+    pub occ_closing_fee: f64,
     // Take profit price
-    pub take_profit: &'a str,
+    pub take_profit: f64,
     // Take profit trigger price type, default: LastPrice
-    pub tp_trigger_by: f64,
+    pub tp_trigger_by: &'a str,
     // Stop loss price
-    pub stop_loss: &'a str,
+    pub stop_loss: f64,
     // Stop loss trigger price
     pub sl_trigger_by: &'a str,
+    // Trailing stop (the distance from the current price)
+    pub trailing_stop: f64,
     // Today's realised pnl
-    pub realised_pnl: &'a str,
+    pub realised_pnl: f64,
+    // Auto add margin
+    pub auto_add_margin: &'a str,
     // Accumulated realised pnl (all-time total)
-    pub cum_realised_pnl: &'a str,
+    pub cum_realised_pnl: f64,
     // Position status: Normal, Liq, Adl
     pub position_status: &'a str,
+    // Position id
+    pub position_id: &'a str,
     // Position sequence
     pub position_seq: &'a str,
+    // Adl rank indicator
+    pub adl_rank_indicator: &'a str,
+    // Qty which can be closed. (If you have a long position, free_qty is negative. vice versa)
+    pub free_qty: f64,
     // TrailingProfit or StopLoss mode Full or Partial
     pub tp_sl_mode: &'a str,
     // Position idx, used to identify positions in different position modes:
     // 0-One-Way Mode
     // 1-Buy side of both side mode
     // 2-Sell side of both side mode
-    pub position_idx: i32,
+    pub position_idx: &'a str,
     // Position mode, MergedSingle or BothSide
     pub mode: &'a str,
     // true means isolated margin mode; false means cross margin mode
     pub isolated: bool,
     // Risk ID
-    pub risk_id: u64,
+    pub risk_id: &'a str,
 }
 
 #[derive(Deserialize, Debug)]
@@ -296,7 +305,7 @@ pub struct Execution<'a> {
     // Unique user-set order ID. Maximum length of 36 characters
     pub order_link_id: &'a str,
     // Transaction price
-    pub price: &'a str,
+    pub price: f64,
     // Order qty
     pub order_qty: f64,
     // Execution type (cannot be Funding)
@@ -304,7 +313,7 @@ pub struct Execution<'a> {
     // Transaction qty
     pub exec_qty: f64,
     // Transaction fee
-    pub exec_fee: &'a str,
+    pub exec_fee: f64,
     // Number of unfilled contracts from the order's size
     pub leaves_qty: f64,
     // Is maker
@@ -326,11 +335,23 @@ pub struct Order<'a> {
     // Conditional order type
     pub order_type: &'a str,
     // Order price
-    pub price: &'a str,
+    pub price: f64,
     // Transaction qty
     pub qty: f64,
+    // Number of unfilled contracts from the order's size
+    pub leaves_qty: f64,
     // Time in force
     pub time_in_force: &'a str,
+    // Create type
+    pub create_type: &'a str,
+    // Cancel type
+    pub cancel_type: &'a str,
+    // Take profit price, only take effect upon opening the position
+    pub take_profit: f64,
+    // Stop loss price, only take effect upon opening the position
+    pub stop_loss: f64,
+    // Trailing stop (the distance from the current price)
+    pub trailing_stop: f64,
     // Order status
     pub order_status: &'a str,
     // Last execution price
@@ -338,7 +359,9 @@ pub struct Order<'a> {
     // Cumulative qty of trading
     pub cum_exec_qty: f64,
     // Cumulative value of trading
-    pub cum_exec_value: &'a str,
+    pub cum_exec_value: f64,
+    // Cumulative trading fees
+    pub cum_exec_fee: f64,
     // True means your position can only reduce in size if this order is triggered
     pub reduce_only: bool,
     // For a closing order. It can only reduce your position, not increase it. If the account has insufficient available balance when the closing order is triggered, then other active orders of similar contracts will be cancelled or reduced. It can be used to ensure your stop loss reduces your position regardless of current available margin.
@@ -347,7 +370,7 @@ pub struct Order<'a> {
     // 0-One-Way Mode
     // 1-Buy side of both side mode
     // 2-Sell side of both side mode
-    pub position_idx: i32,
+    pub position_idx: &'a str,
     // Timestamp (when the order_status was New)
     pub create_time: &'a str,
     // Update time
@@ -369,19 +392,23 @@ pub struct StopOrder<'a> {
     // Conditional order type
     pub order_type: &'a str,
     // Order price
-    pub price: &'a str,
+    pub price: f64,
     // Transaction qty
     pub qty: f64,
     // Time in force
     pub time_in_force: &'a str,
+    // Create type
+    pub create_type: &'a str,
+    // Cancel type
+    pub cancel_type: &'a str,
     // Order status
     pub order_status: &'a str,
     // Conditional order type
     pub stop_order_type: &'a str,
     // Trigger price type. Default LastPrice
-    pub trigger_by: &'a str,
+    pub tp_trigger_by: &'a str,
     // If stop_order_type is TrailingProfit, this field is the trailing stop active price.
-    pub trigger_price: &'a str,
+    pub trigger_price: f64,
     // True means your position can only reduce in size if this order is triggered
     pub reduce_only: bool,
     // For a closing order. It can only reduce your position, not increase it. If the account has insufficient available balance when the closing order is triggered, then other active orders of similar contracts will be cancelled or reduced. It can be used to ensure your stop loss reduces your position regardless of current available margin.
@@ -390,11 +417,11 @@ pub struct StopOrder<'a> {
     // 0-One-Way Mode
     // 1-Buy side of both side mode
     // 2-Sell side of both side mode
-    pub position_idx: i32,
+    pub position_idx: &'a str,
     // Creation time (when the order_status was Created)
-    pub create_at: &'a str,
+    pub create_time: &'a str,
     // Update time
-    pub updated_at: &'a str,
+    pub update_time: &'a str,
 }
 
 #[derive(Deserialize, Debug)]
@@ -413,7 +440,7 @@ pub struct BasePrivateResponse<'a, D> {
 pub struct BasePrivateResponseWithAction<'a, D> {
     pub topic: &'a str,
     pub action: &'a str,
-    pub data: D,
+    pub data: Vec<D>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -425,6 +452,13 @@ pub enum PrivateResponse<'a> {
     Order(BasePrivateResponseWithAction<'a, Order<'a>>),
     StopOrder(BasePrivateResponse<'a, StopOrder<'a>>),
     Wallet(BasePrivateResponse<'a, Wallet>),
+}
+
+// todo: move to shared mod
+#[derive(Serialize)]
+struct AuthReq<'a> {
+    op: &'a str,
+    args: [&'a str; 3],
 }
 
 pub struct PrivateWebSocketApiClient {
@@ -495,6 +529,16 @@ impl PrivateWebSocketApiClient {
 
         let (tx, rx) = mpsc::channel::<String>();
         spawn_ping_thread(tx);
+
+        // authentication
+        let expires = millseconds()? + 10000;
+        let val = format!("GET/realtime{}", expires);
+        let signature = sign(&self.secret, &val);
+        let auth_req = AuthReq {
+            op: "auth",
+            args: [&self.api_key, &expires.to_string(), &signature],
+        };
+        ws.write_message(Message::Text(serde_json::to_string(&auth_req)?))?;
 
         for subscription in &self.subscriptions {
             ws.write_message(Message::Text(subscription.clone()))
