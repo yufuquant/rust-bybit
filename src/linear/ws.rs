@@ -84,6 +84,134 @@ pub struct Trade<'a> {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct InstrumentInfoSnapshot<'a> {
+    // id
+    pub id: u64,
+    // Symbol
+    pub symbol: &'a str,
+    // (Deprecated) Latest transaction price 10^4
+    pub last_price_e4: &'a str,
+    // Latest transaction price
+    pub last_price: &'a str,
+    // (Deprecated) Best bid price * 10^4
+    pub bid1_price_e4: &'a str,
+    // Best bid price
+    pub bid1_price: &'a str,
+    // (Deprecated) Best ask price * 10^4
+    pub ask1_price_e4: &'a str,
+    // Best ask price
+    pub ask1_price: &'a str,
+    // Direction of price change
+    pub last_tick_direction: &'a str,
+    // (Deprecated) Price of 24 hours ago * 10^4
+    pub prev_price_24h_e4: &'a str,
+    // Price of 24 hours ago
+    pub prev_price_24h: &'a str,
+    // Percentage change of market price relative to 24h * 10^4
+    pub price_24h_pcnt_e6: &'a str,
+    // (Deprecated) The highest price in the last 24 hours * 10^4
+    pub high_price_24h_e4: &'a str,
+    // The highest price in the last 24 hours
+    pub high_price_24h: &'a str,
+    // (Deprecated) Lowest price in the last 24 hours * 10^4
+    pub low_price_24h_e4: &'a str,
+    // Lowest price in the last 24 hours
+    pub low_price_24h: &'a str,
+    // (Deprecated) Hourly market price an hour ago * 10^4
+    pub prev_price_1h_e4: &'a str,
+    // Hourly market price an hour ago
+    pub prev_price_1h: &'a str,
+    // Percentage change of market price relative to 1 hour ago * 10^6
+    pub price_1h_pcnt_e6: &'a str,
+    // (Deprecated) Mark price * 10^4
+    pub mark_price_e4: &'a str,
+    // Mark price
+    pub mark_price: &'a str,
+    // (Deprecated) Index_price * 10^4
+    pub index_price_e4: &'a str,
+    // Index_price
+    pub index_price: &'a str,
+    // Open interest * 10^8. The update is not immediate - slowest update is 1 minute
+    pub open_interest_e8: &'a str,
+    // Total turnover * 10^8
+    pub total_turnover_e8: &'a str,
+    // Turnover for 24h * 10^8
+    pub turnover_24h_e8: &'a str,
+    // Total volume * 10^8
+    pub total_volume_e8: &'a str,
+    // Trading volume in the last 24 hours * 10^8
+    pub volume_24h_e8: &'a str,
+    // Funding rate * 10^8
+    pub funding_rate_e6: &'a str,
+    // Predicted funding rate * 10^6
+    pub predicted_funding_rate_e6: &'a str,
+    // Cross sequence (internal value)
+    pub cross_seq: &'a str,
+    // Creation time (when the order_status was Created)
+    pub created_at: &'a str,
+    // Update time
+    pub updated_at: &'a str,
+    // Next settlement time of capital cost
+    pub next_funding_time: &'a str,
+    // Countdown of settlement capital cost
+    pub count_down_hour: &'a str,
+    // funding rate time interval, unit hour
+    pub funding_rate_interval: &'a str,
+    pub settle_time_e9: &'a str,
+    pub delisting_status: &'a str,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct InstrumentInfoDeltaItem<'a> {
+    // id
+    pub id: u64,
+    // Symbol
+    pub symbol: &'a str,
+    pub last_price_e4: Option<&'a str>,
+    pub last_price: Option<&'a str>,
+    pub bid1_price_e4: Option<&'a str>,
+    pub bid1_price: Option<&'a str>,
+    pub ask1_price_e4: Option<&'a str>,
+    pub ask1_price: Option<&'a str>,
+    pub last_tick_direction: Option<&'a str>,
+    pub prev_price_24h_e4: Option<&'a str>,
+    pub prev_price_24h: Option<&'a str>,
+    pub price_24h_pcnt_e6: Option<&'a str>,
+    pub high_price_24h_e4: Option<&'a str>,
+    pub high_price_24h: Option<&'a str>,
+    pub low_price_24h_e4: Option<&'a str>,
+    pub low_price_24h: Option<&'a str>,
+    pub prev_price_1h_e4: Option<&'a str>,
+    pub prev_price_1h: Option<&'a str>,
+    pub price_1h_pcnt_e6: Option<&'a str>,
+    pub mark_price_e4: Option<&'a str>,
+    pub mark_price: Option<&'a str>,
+    pub index_price_e4: Option<&'a str>,
+    pub index_price: Option<&'a str>,
+    pub open_interest_e8: Option<&'a str>,
+    pub total_turnover_e8: Option<&'a str>,
+    pub turnover_24h_e8: Option<&'a str>,
+    pub total_volume_e8: Option<&'a str>,
+    pub volume_24h_e8: Option<&'a str>,
+    pub funding_rate_e6: Option<&'a str>,
+    pub predicted_funding_rate_e6: Option<&'a str>,
+    pub next_funding_time: Option<&'a str>,
+    pub count_down_hour: Option<&'a str>,
+    pub funding_rate_interval: Option<&'a str>,
+    pub settle_time_e9: Option<&'a str>,
+    pub delisting_status: Option<&'a str>,
+    pub cross_seq: &'a str,
+    pub created_at: &'a str,
+    pub updated_at: &'a str,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct InstrumentInfoDelta<'a> {
+    #[serde(borrow)]
+    pub update: Vec<InstrumentInfoDeltaItem<'a>>,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Kline<'a> {
     // Start timestamp point for result, in seconds
     pub start: u64,
@@ -130,7 +258,8 @@ pub enum PublicResponse<'a> {
     OrderBookL2Snapshot(Response<'a, OrderBookSnapshot<'a>>),
     OrderBookL2Delta(Response<'a, OrderBookDelta<'a>>),
     Trade(BaseResponse<'a, Vec<Trade<'a>>>),
-    // InstrumentInfo
+    InstrumentInfoSnapshot(Response<'a, InstrumentInfoSnapshot<'a>>),
+    InstrumentInfoDelta(Response<'a, InstrumentInfoDelta<'a>>),
     Kline(BaseResponseWithTimestamp<'a, Vec<Kline<'a>>>),
     Liquidation(BaseResponse<'a, Liquidation<'a>>),
 }
@@ -164,6 +293,10 @@ impl PublicWebSocketApiClient {
 
     pub fn subscribe_trade(&mut self, symbols: &Vec<String>) {
         self.subscribe("trade", symbols);
+    }
+
+    pub fn subscribe_instrument_info(&mut self, symbols: &Vec<String>) {
+        self.subscribe("instrument_info.100ms", symbols);
     }
 
     pub fn subscribe_kline(&mut self, symbols: &Vec<String>, interval: &str) {
