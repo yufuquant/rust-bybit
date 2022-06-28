@@ -35,6 +35,16 @@ pub struct BaseResponseWithTimestamp<'a, D> {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct Response<'a, D> {
+    pub topic: &'a str,
+    #[serde(alias = "type")]
+    pub res_type: &'a str,
+    pub data: D,
+    pub cross_seq: u64,
+    pub timestamp_e6: u64,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct OrderBookItem<'a> {
     pub price: &'a str,
     pub symbol: &'a str,
@@ -90,7 +100,7 @@ pub struct Insurance<'a> {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct InstrumentInfoSnapshot<'a> {
+pub struct PerpetualInstrumentInfoSnapshot<'a> {
     // id
     pub id: u64,
     // Symbol
@@ -120,7 +130,7 @@ pub struct InstrumentInfoSnapshot<'a> {
     pub prev_price_1h_e4: u64,
     // Hourly market price an hour ago
     pub prev_price_1h: &'a str,
-    pub prev_price_1h_pcnt_e6: i64,
+    pub price_1h_pcnt_e6: i64,
     pub mark_price_e4: u64,
     // Mark price
     pub mark_price: &'a str,
@@ -135,13 +145,13 @@ pub struct InstrumentInfoSnapshot<'a> {
     // Turnover for 24h * 10^8
     pub turnover_24h_e8: u64,
     // Total volume * 10^8
-    pub total_volume_e8: u64,
+    pub total_volume: u64,
     // Trading volume in the last 24 hours
     pub volume_24h: u64,
     // Funding rate * 10^6
-    pub funding_rate_e6: i64,
+    pub funding_rate_e6: i32,
     // Predicted funding rate * 10^6
-    pub predicted_funding_rate_e6: i64,
+    pub predicted_funding_rate_e6: i32,
     // Cross sequence (internal value)
     pub cross_seq: u64,
     // Creation time (when the order_status was Created)
@@ -151,13 +161,15 @@ pub struct InstrumentInfoSnapshot<'a> {
     // Next settlement time of capital cost
     pub next_funding_time: &'a str,
     // Countdown of settlement capital cost
-    pub count_down_hour: i64,
+    pub countdown_hour: u32,
     // funding rate time interval, unit hour
-    pub funding_rate_interval: i64,
+    pub funding_rate_interval: u32,
+    pub settle_time_e9: u64,
+    pub delisting_status: &'a str,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct InstrumentInfoDeltaItem<'a> {
+pub struct PerpetualInstrumentInfoDeltaItem<'a> {
     // id
     pub id: u64,
     // Symbol
@@ -183,11 +195,183 @@ pub struct InstrumentInfoDeltaItem<'a> {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct InstrumentInfoDelta<'a> {
+pub struct PerpetualInstrumentInfoDelta<'a> {
     #[serde(borrow)]
-    pub delete: Vec<InstrumentInfoDeltaItem<'a>>,
-    pub update: Vec<InstrumentInfoDeltaItem<'a>>,
-    pub insert: Vec<InstrumentInfoDeltaItem<'a>>,
+    pub delete: Vec<PerpetualInstrumentInfoDeltaItem<'a>>,
+    pub update: Vec<PerpetualInstrumentInfoDeltaItem<'a>>,
+    pub insert: Vec<PerpetualInstrumentInfoDeltaItem<'a>>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct FuturesInstrumentInfoSnapshot<'a> {
+    // id
+    pub id: u64,
+    // Symbol
+    pub symbol: &'a str,
+    // Symbol name alias
+    pub symbol_name: &'a str,
+    // The year of symbol
+    pub symbol_year: u32,
+    // Contract type
+    pub contract_type: &'a str,
+    // Coin type
+    pub coin: &'a str,
+    // Quote symbol
+    pub quote_symbol: &'a str,
+    // Position Mode. 0: One-Way Mode; 3: Hedge Mode
+    pub mode: &'a str,
+    // Support float profit open position or not
+    pub is_up_borrowable: i32,
+    // Symbol import timestamp * 10^9
+    pub import_time_e9: u64,
+    // Enable trading timestamp for symbol * 10^9
+    pub start_trading_time_e9: u64,
+    // Rest time until settled in seconds
+    pub time_to_settle: u64,
+    // Delivery timestamp * 10^9
+    pub settle_time_e9: u64,
+    // Delivery fee rate * 10^8
+    pub settle_fee_rate_e8: i32,
+    // Contract status
+    pub contract_status: &'a str,
+    // Quantity of subsidy from trading platform in BTC * 10^8
+    pub system_subsidy_e8: u64,
+    // Latest transaction price
+    pub last_price_e4: u64,
+    // Latest transaction price
+    pub last_price: &'a str,
+    // Direction of price change
+    pub last_tick_direction: &'a str,
+    pub bid1_price_e4: u64,
+    // Best bid price
+    pub bid1_price: &'a str,
+    pub ask1_price_e4: u64,
+    // Best ask price
+    pub ask1_price: &'a str,
+    pub prev_price_24h_e4: u64,
+    // Price of 24 hours ago
+    pub prev_price_24h: &'a str,
+    // Percentage change of market price relative to 24h * 10^4
+    pub price_24h_pcnt_e6: i64,
+    pub high_price_24h_e4: u64,
+    // The highest price in the last 24 hours
+    pub high_price_24h: &'a str,
+    pub low_price_24h_e4: u64,
+    // Lowest price in the last 24 hours
+    pub low_price_24h: &'a str,
+    pub prev_price_1h_e4: u64,
+    // Hourly market price an hour ago
+    pub prev_price_1h: &'a str,
+    pub price_1h_pcnt_e6: i64,
+    pub mark_price_e4: u64,
+    // Mark price
+    pub mark_price: &'a str,
+    pub index_price_e4: u64,
+    // Index_price
+    pub index_price: &'a str,
+    // Open interest. The update is not immediate - slowest update is 1 minute
+    pub open_interest: u64,
+    pub open_value_e8: u64,
+    // Total turnover
+    pub total_turnover_e8: u64,
+    // Turnover for 24h * 10^8
+    pub turnover_24h_e8: u64,
+    pub fair_basis_e8: u64,
+    pub fair_basis_rate_e8: u64,
+    pub basis_in_year_e8: u64,
+    pub expect_price_e4: u64,
+    // Total volume * 10^8
+    pub total_volume: u64,
+    // Trading volume in the last 24 hours
+    pub volume_24h: u64,
+    // Cross sequence (internal value)
+    pub cross_seq: u64,
+    // Creation time (when the order_status was Created)
+    pub created_at_e9: u64,
+    // Update time
+    pub updated_at_e9: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct FuturesInstrumentInfoDeltaItem<'a> {
+    // id
+    pub id: u64,
+    // Symbol
+    pub symbol: &'a str,
+    pub symbol_name: &'a str,
+    pub symbol_year: u32,
+    pub contract_type: &'a str,
+    pub coin: &'a str,
+    pub quote_symbol: &'a str,
+    pub mode: &'a str,
+    pub start_trading_time_e9: u64,
+    pub time_to_settle: u64,
+    pub settle_time_e9: u64,
+
+    pub is_up_borrowable: Option<i32>,
+    pub settle_fee_rate_e8: Option<i32>,
+    pub import_time_e9: Option<u64>,
+    pub contract_status: Option<&'a str>,
+    pub system_subsidy_e8: Option<u64>,
+    pub last_price_e4: Option<u64>,
+    // Latest transaction price
+    pub last_price: Option<&'a str>,
+    // Direction of price change
+    pub last_tick_direction: Option<&'a str>,
+    pub bid1_price_e4: Option<u64>,
+    // Best bid price
+    pub bid1_price: Option<&'a str>,
+    pub ask1_price_e4: Option<u64>,
+    // Best ask price
+    pub ask1_price: Option<&'a str>,
+    pub prev_price_24h_e4: Option<u64>,
+    // Price of 24 hours ago
+    pub prev_price_24h: Option<&'a str>,
+    // Percentage change of market price relative to 24h * 10^4
+    pub price_24h_pcnt_e6: Option<i64>,
+    pub high_price_24h_e4: Option<u64>,
+    // The highest price in the last 24 hours
+    pub high_price_24h: Option<&'a str>,
+    pub low_price_24h_e4: Option<u64>,
+    // Lowest price in the last 24 hours
+    pub low_price_24h: Option<&'a str>,
+    pub prev_price_1h_e4: Option<u64>,
+    // Hourly market price an hour ago
+    pub prev_price_1h: Option<&'a str>,
+    pub price_1h_pcnt_e6: Option<i64>,
+    pub mark_price_e4: Option<u64>,
+    // Mark price
+    pub mark_price: Option<&'a str>,
+    pub index_price_e4: Option<u64>,
+    // Index_price
+    pub index_price: Option<&'a str>,
+    // Open interest. The update is not immediate - slowest update is 1 minute
+    pub open_interest: Option<u64>,
+    pub open_value_e8: Option<u64>,
+    // Total turnover
+    pub total_turnover_e8: Option<u64>,
+    // Turnover for 24h * 10^8
+    pub turnover_24h_e8: Option<u64>,
+    pub fair_basis_e8: Option<u64>,
+    pub fair_basis_rate_e8: Option<u64>,
+    pub basis_in_year_e8: Option<u64>,
+    pub expect_price_e4: Option<u64>,
+    // Total volume * 10^8
+    pub total_volume: Option<u64>,
+    // Trading volume in the last 24 hours
+    pub volume_24h: Option<u64>,
+    // Cross sequence (internal value)
+    pub cross_seq: Option<u64>,
+    // Creation time (when the order_status was Created)
+    pub created_at_e9: Option<u64>,
+    // Update time
+    pub updated_at_e9: Option<u64>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct FuturesInstrumentInfoDelta<'a> {
+    #[serde(borrow)]
+    pub update: Vec<FuturesInstrumentInfoDeltaItem<'a>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -238,8 +422,10 @@ pub enum PublicResponse<'a> {
     OrderBookL2Delta(BaseResponseWithTimestamp<'a, OrderBookDelta<'a>>),
     Trade(BaseResponse<'a, Vec<Trade<'a>>>),
     Insurance(BaseResponse<'a, Vec<Insurance<'a>>>),
-    InstrumentInfoSnapshot(BaseResponseWithTimestamp<'a, InstrumentInfoSnapshot<'a>>),
-    InstrumentInfoDelta(BaseResponseWithTimestamp<'a, InstrumentInfoDelta<'a>>),
+    PerpetualInstrumentInfoSnapshot(Response<'a, PerpetualInstrumentInfoSnapshot<'a>>),
+    PerpetualInstrumentInfoDelta(Response<'a, PerpetualInstrumentInfoDelta<'a>>),
+    FuturesInstrumentInfoSnapshot(Response<'a, FuturesInstrumentInfoSnapshot<'a>>),
+    FuturesInstrumentInfoDelta(Response<'a, FuturesInstrumentInfoDelta<'a>>),
     Kline(BaseResponseWithTimestamp<'a, Vec<Kline>>),
     Liquidation(BaseResponse<'a, Liquidation<'a>>),
 }
