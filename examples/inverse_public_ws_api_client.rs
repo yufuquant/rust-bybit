@@ -15,24 +15,26 @@ fn main() {
     client.subscribe_liquidation(&symbols);
 
     let callback = |res: PublicResponse| match res {
-        PublicResponse::OrderBookL2Snapshot(res) => println!("Order book L2 snapshot: {:?}", res),
-        PublicResponse::OrderBookL2Delta(res) => println!("Order book L2 delta: {:?}", res),
-        PublicResponse::Trade(res) => println!("Trade: {:?}", res),
-        PublicResponse::Insurance(res) => println!("Insurance: {:?}", res),
-        PublicResponse::PerpetualInstrumentInfoSnapshot(res) => {
+        PublicResponse::OrderBookL2SnapshotMessage(res) => {
+            println!("Order book L2 snapshot: {:?}", res)
+        }
+        PublicResponse::OrderBookL2DeltaMessage(res) => println!("Order book L2 delta: {:?}", res),
+        PublicResponse::TradeMessage(res) => println!("Trade: {:?}", res),
+        PublicResponse::InsuranceMessage(res) => println!("Insurance: {:?}", res),
+        PublicResponse::PerpetualInstrumentInfoSnapshotMessage(res) => {
             println!("Perpetual instrument info snapshot: {:?}", res)
         }
-        PublicResponse::PerpetualInstrumentInfoDelta(res) => {
+        PublicResponse::PerpetualInstrumentInfoDeltaMessage(res) => {
             println!("Perpetual instrument info delta: {:?}", res)
         }
-        PublicResponse::FuturesInstrumentInfoSnapshot(res) => {
+        PublicResponse::FuturesInstrumentInfoSnapshotMessage(res) => {
             println!("Futures instrument info snapshot: {:?}", res)
         }
-        PublicResponse::FuturesInstrumentInfoDelta(res) => {
+        PublicResponse::FuturesInstrumentInfoDeltaMessage(res) => {
             println!("Futures instrument info delta: {:?}", res)
         }
-        PublicResponse::Kline(res) => println!("Kline: {:?}", res),
-        PublicResponse::Liquidation(res) => println!("Liquidation: {:?}", res),
+        PublicResponse::KlineMessage(res) => println!("Kline: {:?}", res),
+        PublicResponse::LiquidationMessage(res) => println!("Liquidation: {:?}", res),
     };
 
     match client.run(callback) {
