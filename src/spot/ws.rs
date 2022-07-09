@@ -385,77 +385,82 @@ impl PublicWebSocketApiClient {
         };
     }
 
-    pub fn subscribe_trade(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_trade<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = Subscription {
             topic: "trade".into(),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: CommonParams { binary },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_realtimes(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_realtimes<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = Subscription {
             topic: "realtimes".into(),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: CommonParams { binary },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_kline(&mut self, symbol: &str, kline_type: &str, binary: bool) {
+    pub fn subscribe_kline<S: AsRef<str>>(&mut self, symbol: S, kline_type: &str, binary: bool) {
         let subscription = Subscription {
             topic: format!("kline_{}", kline_type),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: CommonParams { binary },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_depth(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_depth<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = Subscription {
             topic: "depth".into(),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: CommonParams { binary },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_merged_depth(&mut self, symbol: &str, binary: bool, dump_scale: usize) {
+    pub fn subscribe_merged_depth<S: AsRef<str>>(
+        &mut self,
+        symbol: S,
+        binary: bool,
+        dump_scale: usize,
+    ) {
         let subscription = Subscription {
             topic: "mergedDepth".into(),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: MergedDepthParams { binary, dump_scale },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_diff_depth(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_diff_depth<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = Subscription {
             topic: "diffDepth".into(),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: CommonParams { binary },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_lt(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_lt<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = Subscription {
             topic: "lt".into(),
             event: "sub".into(),
-            symbol: symbol.to_string(),
+            symbol: symbol.as_ref().to_string(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -540,26 +545,26 @@ impl PublicV2WebSocketApiClient {
         };
     }
 
-    pub fn subscribe_depth(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_depth<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = SubscriptionV2 {
             topic: "depth".into(),
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.to_string(),
+                symbol: symbol.as_ref().to_string(),
             },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_kline(&mut self, symbol: &str, binary: bool, kline_type: &str) {
+    pub fn subscribe_kline<S: AsRef<str>>(&mut self, symbol: S, binary: bool, kline_type: &str) {
         let subscription = SubscriptionV2 {
             topic: "kline".into(),
             event: "sub".into(),
             params: KlineParamsV2 {
                 binary,
-                symbol: symbol.to_string(),
+                symbol: symbol.as_ref().to_string(),
                 kline_type: kline_type.to_string(),
             },
         };
@@ -567,39 +572,39 @@ impl PublicV2WebSocketApiClient {
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_trade(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_trade<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = SubscriptionV2 {
             topic: "trade".into(),
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.to_string(),
+                symbol: symbol.as_ref().to_string(),
             },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_book_ticker(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_book_ticker<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = SubscriptionV2 {
             topic: "bookTicker".into(),
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.to_string(),
+                symbol: symbol.as_ref().to_string(),
             },
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_realtimes(&mut self, symbol: &str, binary: bool) {
+    pub fn subscribe_realtimes<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
         let subscription = SubscriptionV2 {
             topic: "realtimes".into(),
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.to_string(),
+                symbol: symbol.as_ref().to_string(),
             },
         };
         self.subscriptions

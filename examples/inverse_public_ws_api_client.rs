@@ -5,7 +5,7 @@ fn main() {
 
     let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/realtime");
 
-    let symbols = vec!["BTCUSD".to_owned(), "ETHUSDU22".to_owned()];
+    let symbols = vec!["BTCUSD", "ETHUSDU22"];
     client.subscribe_order_book_l2_25(&symbols);
     client.subscribe_order_book_l2_200(&symbols);
     client.subscribe_trade(&symbols);
