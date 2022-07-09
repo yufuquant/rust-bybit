@@ -2,6 +2,7 @@ use crate::error::Result;
 use crate::util::*;
 use log::*;
 use serde::{Deserialize, Serialize};
+use serde_aux::prelude::*;
 use serde_json;
 use std::sync::mpsc::{self, Sender};
 use std::thread;
@@ -18,7 +19,7 @@ pub struct PingRequest<'a> {
 }
 
 /// Also handles subscription-acknowledgment messages
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Pong<'a> {
     pub success: bool,
     pub ret_msg: &'a str,
@@ -26,20 +27,33 @@ pub struct Pong<'a> {
     pub request: PingRequest<'a>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct BaseResponse<'a, D> {
     pub topic: &'a str,
     pub data: D,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct BaseResponseWithTimestamp<'a, D> {
     pub topic: &'a str,
     pub data: D,
     pub timestamp_e6: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum OrderSide {
+    Buy,
+    Sell,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum PositionSide {
+    Buy,
+    Sell,
+    None,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Response<'a, D> {
     pub topic: &'a str,
     #[serde(alias = "type")]
@@ -49,24 +63,27 @@ pub struct Response<'a, D> {
     pub timestamp_e6: u64,
 }
 
-#[derive(Deserialize, Debug)]
+// TODO: annotate these with comments from the Bybit API docs
+
+#[derive(Debug, Deserialize)]
 pub struct OrderBookItem<'a> {
-    pub price: &'a str,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub price: f64,
     pub symbol: &'a str,
     pub id: u64,
-    pub side: &'a str,
+    pub side: OrderSide,
     pub size: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct OrderBookDeleteItem<'a> {
     pub price: &'a str,
     pub symbol: &'a str,
     pub id: u64,
-    pub side: &'a str,
+    pub side: OrderSide,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct OrderBookDelta<'a> {
     #[serde(borrow)]
     pub delete: Vec<OrderBookDeleteItem<'a>>,
@@ -74,7 +91,7 @@ pub struct OrderBookDelta<'a> {
     pub insert: Vec<OrderBookItem<'a>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Trade<'a> {
     // Symbol
     pub symbol: &'a str,
@@ -89,12 +106,12 @@ pub struct Trade<'a> {
     // Millisecond timestamp
     pub trade_time_ms: u64,
     // Direction of taker
-    pub side: &'a str,
+    pub side: OrderSide,
     // Trade ID
     pub trade_id: &'a str,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Insurance<'a> {
     // Symbol
     pub currency: &'a str,
@@ -104,7 +121,7 @@ pub struct Insurance<'a> {
     pub wallet_balance: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PerpetualInstrumentInfoSnapshot<'a> {
     // id
     pub id: u64,
@@ -173,7 +190,7 @@ pub struct PerpetualInstrumentInfoSnapshot<'a> {
     pub delisting_status: &'a str,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PerpetualInstrumentInfoDeltaItem<'a> {
     // id
     pub id: u64,
@@ -199,7 +216,7 @@ pub struct PerpetualInstrumentInfoDeltaItem<'a> {
     pub updated_at: &'a str,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PerpetualInstrumentInfoDelta<'a> {
     #[serde(borrow)]
     pub delete: Vec<PerpetualInstrumentInfoDeltaItem<'a>>,
@@ -207,7 +224,7 @@ pub struct PerpetualInstrumentInfoDelta<'a> {
     pub insert: Vec<PerpetualInstrumentInfoDeltaItem<'a>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct FuturesInstrumentInfoSnapshot<'a> {
     // id
     pub id: u64,
@@ -297,7 +314,7 @@ pub struct FuturesInstrumentInfoSnapshot<'a> {
     pub updated_at_e9: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct FuturesInstrumentInfoDeltaItem<'a> {
     // id
     pub id: u64,
@@ -373,13 +390,13 @@ pub struct FuturesInstrumentInfoDeltaItem<'a> {
     pub updated_at_e9: Option<u64>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct FuturesInstrumentInfoDelta<'a> {
     #[serde(borrow)]
     pub update: Vec<FuturesInstrumentInfoDeltaItem<'a>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Kline {
     // Start timestamp point for result, in seconds
     pub start: u64,
@@ -405,12 +422,12 @@ pub struct Kline {
     pub timestamp: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Liquidation<'a> {
     // Symbol
     pub symbol: &'a str,
     // Liquidated position's side
-    pub side: &'a str,
+    pub side: OrderSide,
     // Bankruptcy price
     pub price: &'a str,
     // Order quantity
@@ -419,20 +436,37 @@ pub struct Liquidation<'a> {
     pub time: u64,
 }
 
-#[derive(Deserialize, Debug)]
+// DISCUSS: whether or not to keep this export pattern
+// Options:
+// - avoid the indirection, in-line all types
+// - do not export this type
+// - maybe there's another option?
+pub type OrderBookL2SnapshotMessage<'a> = BaseResponseWithTimestamp<'a, Vec<OrderBookItem<'a>>>;
+pub type OrderBookL2DeltaMessage<'a> = BaseResponseWithTimestamp<'a, OrderBookDelta<'a>>;
+pub type TradeMessage<'a> = BaseResponse<'a, Vec<Trade<'a>>>;
+pub type InsuranceMessage<'a> = BaseResponse<'a, Vec<Insurance<'a>>>;
+pub type PerpetualInstrumentInfoSnapshotMessage<'a> =
+    Response<'a, PerpetualInstrumentInfoSnapshot<'a>>;
+pub type PerpetualInstrumentInfoDeltaMessage<'a> = Response<'a, PerpetualInstrumentInfoDelta<'a>>;
+pub type FuturesInstrumentInfoSnapshotMessage<'a> = Response<'a, FuturesInstrumentInfoSnapshot<'a>>;
+pub type FuturesInstrumentInfoDeltaMessage<'a> = Response<'a, FuturesInstrumentInfoDelta<'a>>;
+pub type KlineMessage<'a> = BaseResponseWithTimestamp<'a, Vec<Kline>>;
+pub type LiquidationMessage<'a> = BaseResponse<'a, Liquidation<'a>>;
+
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum PublicResponse<'a> {
     #[serde(borrow)]
-    OrderBookL2Snapshot(BaseResponseWithTimestamp<'a, Vec<OrderBookItem<'a>>>),
-    OrderBookL2Delta(BaseResponseWithTimestamp<'a, OrderBookDelta<'a>>),
-    Trade(BaseResponse<'a, Vec<Trade<'a>>>),
-    Insurance(BaseResponse<'a, Vec<Insurance<'a>>>),
-    PerpetualInstrumentInfoSnapshot(Response<'a, PerpetualInstrumentInfoSnapshot<'a>>),
-    PerpetualInstrumentInfoDelta(Response<'a, PerpetualInstrumentInfoDelta<'a>>),
-    FuturesInstrumentInfoSnapshot(Response<'a, FuturesInstrumentInfoSnapshot<'a>>),
-    FuturesInstrumentInfoDelta(Response<'a, FuturesInstrumentInfoDelta<'a>>),
-    Kline(BaseResponseWithTimestamp<'a, Vec<Kline>>),
-    Liquidation(BaseResponse<'a, Liquidation<'a>>),
+    OrderBookL2SnapshotMessage(OrderBookL2SnapshotMessage<'a>),
+    OrderBookL2DeltaMessage(OrderBookL2DeltaMessage<'a>),
+    TradeMessage(TradeMessage<'a>),
+    InsuranceMessage(InsuranceMessage<'a>),
+    PerpetualInstrumentInfoSnapshotMessage(PerpetualInstrumentInfoSnapshotMessage<'a>),
+    PerpetualInstrumentInfoDeltaMessage(PerpetualInstrumentInfoDeltaMessage<'a>),
+    FuturesInstrumentInfoSnapshotMessage(FuturesInstrumentInfoSnapshotMessage<'a>),
+    FuturesInstrumentInfoDeltaMessage(FuturesInstrumentInfoDeltaMessage<'a>),
+    KlineMessage(KlineMessage<'a>),
+    LiquidationMessage(LiquidationMessage<'a>),
 }
 
 pub struct PublicWebSocketApiClient {
@@ -551,6 +585,7 @@ impl PublicWebSocketApiClient {
                 }
             }
         }
+
         Ok(())
     }
 
@@ -571,13 +606,13 @@ impl PublicWebSocketApiClient {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 pub struct BasePrivateResponse<'a, D> {
     pub topic: &'a str,
     pub data: Vec<D>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 pub struct Position<'a> {
     /// UserID
     pub user_id: u32,
@@ -585,9 +620,8 @@ pub struct Position<'a> {
     pub symbol: &'a str,
     /// Position qty
     pub size: u32,
-    /// Side
-    // TODO: improve by parsing to an enum
-    pub side: &'a str,
+    /// Side, can be Buy, Sell, or None
+    pub side: PositionSide,
     /// Position value
     pub position_value: &'a str,
     /// Average entry price
@@ -649,12 +683,12 @@ pub struct Position<'a> {
     pub sl_free_size_x: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 pub struct Execution<'a> {
     /// Symbol
     pub symbol: &'a str,
     /// Side    
-    pub side: &'a str,
+    pub side: OrderSide,
     /// Order ID    
     pub order_id: &'a str,
     /// Transaction ID    
@@ -662,7 +696,8 @@ pub struct Execution<'a> {
     /// Unique user-set order ID. Maximum length of 36 characters    
     pub order_link_id: &'a str,
     /// Transaction price    
-    pub price: &'a str,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub price: f64,
     /// Order qty    
     pub order_qty: u32,
     /// Execution type (cannot be Funding)    
@@ -679,7 +714,7 @@ pub struct Execution<'a> {
     pub trade_time: &'a str,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 pub struct Order<'a> {
     /// Order ID
     pub order_id: &'a str,
@@ -688,11 +723,13 @@ pub struct Order<'a> {
     /// Symbol
     pub symbol: &'a str,
     /// Side
-    pub side: &'a str,
+    pub side: OrderSide,
     /// Conditional order type
+    // TODO: represent this as an enum
     pub order_type: &'a str,
     /// Order price
-    pub price: &'a str,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub price: f64,
     /// Transaction qty
     pub qty: u32,
     /// Time in force
@@ -731,7 +768,7 @@ pub struct Order<'a> {
     pub close_on_trigger: bool,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 pub struct StopOrder<'a> {
     /// Order ID
     pub order_id: &'a str,
@@ -742,9 +779,10 @@ pub struct StopOrder<'a> {
     /// Symbol
     pub symbol: &'a str,
     /// Order type
+    // TODO: represent this as an enum
     pub order_type: &'a str,
     /// Side
-    pub side: &'a str,
+    pub side: OrderSide,
     /// Order price
     pub price: &'a str,
     /// Order quantity in USD
@@ -769,40 +807,44 @@ pub struct StopOrder<'a> {
     pub timestamp: &'a str,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 pub struct Wallet<'a> {
     /// User ID
     pub user_id: u32,
     /// Coin type
     pub coin: &'a str,
     /// Wallet balance
-    pub wallet_balance: &'a str,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub wallet_balance: f64,
     /// In Isolated Margin Mode:
     ///
-    /// ````
     /// available_balance = wallet_balance - (position_margin + occ_closing_fee + occ_funding_fee + order_margin)
-    /// ````
     ///
     /// In Cross Margin Mode:
     ///
-    /// ````
     /// if unrealised_pnl > 0:
     ///      available_balance = wallet_balance - (position_margin + occ_closing_fee + occ_funding_fee + order_margin)
     ///  if unrealised_pnl < 0:
     ///      available_balance = wallet_balance - (position_margin + occ_closing_fee + occ_funding_fee + order_margin) + unrealised_pnl
-    /// ````
-    pub available_balance: &'a str,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub available_balance: f64,
 }
 
-#[derive(Deserialize, Debug)]
+pub type PositionMessage<'a> = BasePrivateResponse<'a, Position<'a>>;
+pub type ExecutionMessage<'a> = BasePrivateResponse<'a, Execution<'a>>;
+pub type OrderMessage<'a> = BasePrivateResponse<'a, Order<'a>>;
+pub type StopOrderMessage<'a> = BasePrivateResponse<'a, StopOrder<'a>>;
+pub type WalletMessage<'a> = BasePrivateResponse<'a, Wallet<'a>>;
+
+#[derive(Serialize, Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum PrivateResponse<'a> {
     #[serde(borrow)]
-    Position(BasePrivateResponse<'a, Position<'a>>),
-    Execution(BasePrivateResponse<'a, Execution<'a>>),
-    Order(BasePrivateResponse<'a, Order<'a>>),
-    StopOrder(BasePrivateResponse<'a, StopOrder<'a>>),
-    Wallet(BasePrivateResponse<'a, Wallet<'a>>),
+    PositionMessage(PositionMessage<'a>),
+    ExecutionMessage(ExecutionMessage<'a>),
+    OrderMessage(OrderMessage<'a>),
+    StopOrderMessage(StopOrderMessage<'a>),
+    WalletMessage(WalletMessage<'a>),
 }
 
 #[derive(Serialize)]
@@ -956,6 +998,7 @@ impl PrivateWebSocketApiClient {
                 }
             }
         }
+
         Ok(())
     }
 }

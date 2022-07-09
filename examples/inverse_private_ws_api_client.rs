@@ -15,11 +15,11 @@ fn main() {
     client.subscribe_wallet();
 
     let callback = |res: PrivateResponse| match res {
-        PrivateResponse::Position(res) => println!("Position: {:?}", res),
-        PrivateResponse::Execution(res) => println!("Execution: {:?}", res),
-        PrivateResponse::Order(res) => println!("Order: {:?}", res),
-        PrivateResponse::StopOrder(res) => println!("Stop Order: {:?}", res),
-        PrivateResponse::Wallet(res) => println!("Wallet: {:?}", res),
+        PrivateResponse::PositionMessage(res) => println!("Position: {:?}", res),
+        PrivateResponse::ExecutionMessage(res) => println!("Execution: {:?}", res),
+        PrivateResponse::OrderMessage(res) => println!("Order: {:?}", res),
+        PrivateResponse::StopOrderMessage(res) => println!("Stop Order: {:?}", res),
+        PrivateResponse::WalletMessage(res) => println!("Wallet: {:?}", res),
     };
 
     match client.run(callback) {
