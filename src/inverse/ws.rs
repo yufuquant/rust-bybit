@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::util::*;
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -13,6 +14,7 @@ pub struct PingRequest<'a> {
     op: &'a str,
 }
 
+/// Also handles subscription-acknowledgment messages
 #[derive(Deserialize, Debug)]
 pub struct Pong<'a> {
     pub success: bool,
@@ -498,6 +500,7 @@ impl PublicWebSocketApiClient {
             if let Ok(msg) = ws.read_message() {
                 match msg {
                     Message::Text(content) => {
+                        debug!("Received: {}", content);
                         if let Ok(_) = serde_json::from_str::<Pong>(&content) {
                             continue;
                         }
@@ -527,6 +530,357 @@ impl PublicWebSocketApiClient {
         };
         self.subscriptions
             .push(serde_json::to_string(&subscription).unwrap());
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct BasePrivateResponse<'a, D> {
+    pub topic: &'a str,
+    pub data: Vec<D>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Position<'a> {
+    /// UserID
+    pub user_id: u32,
+    /// Symbol
+    pub symbol: &'a str,
+    /// Position qty
+    pub size: u32,
+    /// Side
+    // TODO: improve by parsing to an enum
+    pub side: &'a str,
+    /// Position value
+    pub position_value: &'a str,
+    /// Average entry price
+    pub entry_price: &'a str,
+    /// Liquidation price
+    pub liq_price: &'a str,
+    /// Bankruptcy price
+    pub bust_price: &'a str,
+    /// In Isolated Margin mode, the value is set by the user. In Cross Margin mode, the value is the max leverage at current risk level
+    pub leverage: &'a str,
+    /// Pre-occupied order margin
+    pub order_margin: &'a str,
+    /// Position margin
+    pub position_margin: &'a str,
+    /// Available balance = wallet balance - used margin
+    pub available_balance: &'a str,
+    /// Take profit price
+    pub take_profit: &'a str,
+    /// Stop loss price
+    pub stop_loss: &'a str,
+    /// Today's realised pnl
+    pub realised_pnl: &'a str,
+    /// Trailing stop (the distance from the current price)
+    pub trailing_stop: &'a str,
+    /// Trailing stop active price
+    pub trailing_active: &'a str,
+    /// Wallet balance
+    pub wallet_balance: &'a str,
+    /// [Risk ID](https://bybit-exchange.github.io/docs/inverse/#t-getrisklimit)
+    pub risk_id: u32,
+    /// Position closing fee occupied (your opening fee + expected maximum closing fee)
+    pub occ_closing_fee: &'a str,
+    /// Pre-occupied funding fee: calculated from position qty and current funding fee
+    pub occ_funding_fee: &'a str,
+    /// Whether or not auto-margin replenishment is enabled
+    pub auto_add_margin: u32,
+    /// Accumulated realised pnl (all-time total)
+    pub cum_realised_pnl: &'a str,
+    /// Position status: `Normal`, `Liq`, `Adl`
+    pub position_status: &'a str,
+    /// Position sequence
+    pub position_seq: u32,
+    /// true means isolated margin mode; false means cross margin mode
+    pub Isolated: bool,
+    /// Position mode
+    pub mode: u32,
+    /// 0-One-Way Mode, 1-Buy side of both side mode, 2-Sell side of both side mode (Perpetual)
+    pub position_idx: u32,
+    /// TrailingProfit or StopLoss mode Full or Partial
+    pub tp_sl_mode: &'a str,
+    /// The qty of take profit orders
+    pub tp_order_num: u32,
+    /// The qty of stop loss orders
+    pub sl_order_num: u32,
+    /// The available size to set take profit
+    pub tp_free_size_x: u32,
+    /// The available size to set stop loss
+    pub sl_free_size_x: u32,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Execution<'a> {
+    /// Symbol
+    pub symbol: &'a str,
+    /// Side    
+    pub side: &'a str,
+    /// Order ID    
+    pub order_id: &'a str,
+    /// Transaction ID    
+    pub exec_id: &'a str,
+    /// Unique user-set order ID. Maximum length of 36 characters    
+    pub order_link_id: &'a str,
+    /// Transaction price    
+    pub price: &'a str,
+    /// Order qty    
+    pub order_qty: u32,
+    /// Execution type (cannot be Funding)    
+    pub exec_type: &'a str,
+    /// Transaction qty    
+    pub exec_qty: u32,
+    /// Transaction fee    
+    pub exec_fee: &'a str,
+    /// Number of unfilled contracts from the order's size    
+    pub leaves_qty: u32,
+    /// Is maker    
+    pub is_maker: bool,
+    /// Transaction timestamp    
+    pub trade_time: &'a str,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Order<'a> {
+    /// Order ID
+    pub order_id: &'a str,
+    /// Unique user-set order ID. Maximum length of 36 characters
+    pub order_link_id: &'a str,
+    /// Symbol
+    pub symbol: &'a str,
+    /// Side
+    pub side: &'a str,
+    /// Conditional order type
+    pub order_type: &'a str,
+    /// Order price
+    pub price: &'a str,
+    /// Transaction qty
+    pub qty: u32,
+    /// Time in force
+    pub time_in_force: &'a str,
+    /// Trigger scenario for single action
+    pub create_type: &'a str,
+    /// Trigger scenario for cancel operation
+    pub cancel_type: &'a str,
+    /// Order status
+    pub order_status: &'a str,
+    /// Number of unfilled contracts from the order's size
+    pub leaves_qty: u32,
+    /// Cumulative qty of trading
+    pub cum_exec_qty: u32,
+    /// Cumulative value of trading
+    pub cum_exec_value: &'a str,
+    /// Cumulative trading fees
+    pub cum_exec_fee: &'a str,
+    /// Timestamp (when the order_status was New)
+    pub timestamp: &'a str,
+    /// Take profit price
+    pub take_profit: &'a str,
+    /// Take profit trigger price type
+    pub tp_trigger_by: Option<&'a str>,
+    /// Stop loss price
+    pub stop_loss: &'a str,
+    /// Stop loss trigger price type
+    pub sl_trigger_by: Option<&'a str>,
+    /// Trailing stop (the distance from the current price)
+    pub trailing_stop: &'a str,
+    /// Last execution price
+    pub last_exec_price: &'a str,
+    /// What is a reduce-only order? True means your position can only reduce in size if this order is triggered
+    pub reduce_only: bool,
+    /// What is a close on trigger order? For a closing order. It can only reduce your position, not increase it. If the account has insufficient available balance when the closing order is triggered, then other active orders of similar contracts will be cancelled or reduced. It can be used to ensure your stop loss reduces your position regardless of current available margin.
+    pub close_on_trigger: bool,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct StopOrder<'a> {
+    /// Order ID
+    pub order_id: &'a str,
+    /// Unique user-set order ID. Maximum length of 36 characters
+    pub order_link_id: &'a str,
+    /// UserID
+    pub user_id: u32,
+    /// Symbol
+    pub symbol: &'a str,
+    /// Order type
+    pub order_type: &'a str,
+    /// Side
+    pub side: &'a str,
+    /// Order price
+    pub price: &'a str,
+    /// Order quantity in USD
+    pub qty: u32,
+    /// Time in force
+    pub time_in_force: &'a str,
+    /// Trigger scenario for single action
+    pub create_type: &'a str,
+    /// Trigger scenario for cancel operation
+    pub cancel_type: &'a str,
+    /// Order status
+    pub order_status: &'a str,
+    /// Conditional order type
+    pub stop_order_type: &'a str,
+    /// Trigger price type. Default LastPrice
+    pub trigger_by: &'a str,
+    /// If stop_order_type is TrailingProfit, this field is the trailing stop active price.
+    pub trigger_price: &'a str,
+    /// What is a close on trigger order? For a closing order. It can only reduce your position, not increase it. If the account has insufficient available balance when the closing order is triggered, then other active orders of similar contracts will be cancelled or reduced. It can be used to ensure your stop loss reduces your position regardless of current available margin.
+    pub close_on_trigger: bool,
+    /// UTC time
+    pub timestamp: &'a str,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Wallet<'a> {
+    /// User ID
+    pub user_id: u32,
+    /// Coin type
+    pub coin: &'a str,
+    /// Wallet balance
+    pub wallet_balance: &'a str,
+    /// In Isolated Margin Mode:
+    ///
+    /// ````
+    /// available_balance = wallet_balance - (position_margin + occ_closing_fee + occ_funding_fee + order_margin)
+    /// ````
+    ///
+    /// In Cross Margin Mode:
+    ///
+    /// ````
+    /// if unrealised_pnl > 0:
+    ///      available_balance = wallet_balance - (position_margin + occ_closing_fee + occ_funding_fee + order_margin)
+    ///  if unrealised_pnl < 0:
+    ///      available_balance = wallet_balance - (position_margin + occ_closing_fee + occ_funding_fee + order_margin) + unrealised_pnl
+    /// ````
+    pub available_balance: &'a str,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum PrivateResponse<'a> {
+    #[serde(borrow)]
+    Position(BasePrivateResponse<'a, Position<'a>>),
+    Execution(BasePrivateResponse<'a, Execution<'a>>),
+    Order(BasePrivateResponse<'a, Order<'a>>),
+    StopOrder(BasePrivateResponse<'a, StopOrder<'a>>),
+    Wallet(BasePrivateResponse<'a, Wallet<'a>>),
+}
+
+#[derive(Serialize)]
+struct AuthReq<'a> {
+    op: &'a str,
+    args: [&'a str; 3],
+}
+
+pub struct PrivateWebSocketApiClient {
+    pub uri: String,
+    pub api_key: String,
+    pub secret: String,
+    subscriptions: Vec<String>,
+}
+
+impl PrivateWebSocketApiClient {
+    pub fn new(uri: &str, api_key: &str, secret: &str) -> Self {
+        Self {
+            uri: uri.to_string(),
+            api_key: api_key.to_string(),
+            secret: secret.to_string(),
+            subscriptions: Vec::new(),
+        }
+    }
+
+    pub fn subscribe_position(&mut self) {
+        let subscription = Subscription {
+            op: "subscribe".into(),
+            args: vec!["position".into()],
+        };
+        self.subscriptions
+            .push(serde_json::to_string(&subscription).unwrap());
+    }
+
+    pub fn subscribe_execution(&mut self) {
+        let subscription = Subscription {
+            op: "subscribe".into(),
+            args: vec!["execution".into()],
+        };
+        self.subscriptions
+            .push(serde_json::to_string(&subscription).unwrap());
+    }
+
+    pub fn subscribe_order(&mut self) {
+        let subscription = Subscription {
+            op: "subscribe".into(),
+            args: vec!["order".into()],
+        };
+        self.subscriptions
+            .push(serde_json::to_string(&subscription).unwrap());
+    }
+
+    pub fn subscribe_stop_order(&mut self) {
+        let subscription = Subscription {
+            op: "subscribe".into(),
+            args: vec!["stop_order".into()],
+        };
+        self.subscriptions
+            .push(serde_json::to_string(&subscription).unwrap());
+    }
+
+    pub fn subscribe_wallet(&mut self) {
+        let subscription = Subscription {
+            op: "subscribe".into(),
+            args: vec!["wallet".into()],
+        };
+        self.subscriptions
+            .push(serde_json::to_string(&subscription).unwrap());
+    }
+
+    pub fn run<Callback: FnMut(PrivateResponse)>(&self, mut callback: Callback) -> Result<()> {
+        let req = Url::parse(&self.uri).unwrap();
+        let (mut ws, _) = connect(req).expect("Can't connect");
+
+        let (tx, rx) = mpsc::channel::<String>();
+        spawn_ping_thread(tx);
+
+        // authentication
+        let expires = millseconds()? + 10000;
+        let val = format!("GET/realtime{}", expires);
+        let signature = sign(&self.secret, &val);
+        let auth_req = AuthReq {
+            op: "auth",
+            args: [&self.api_key, &expires.to_string(), &signature],
+        };
+        ws.write_message(Message::Text(serde_json::to_string(&auth_req)?))?;
+
+        for subscription in &self.subscriptions {
+            ws.write_message(Message::Text(subscription.clone()))
+                .unwrap();
+        }
+
+        loop {
+            if let Ok(ping) = rx.try_recv() {
+                ws.write_message(Message::Text(ping)).unwrap();
+            }
+
+            if let Ok(msg) = ws.read_message() {
+                match msg {
+                    Message::Text(content) => {
+                        debug!("Received: {}", content);
+                        if let Ok(_) = serde_json::from_str::<Pong>(&content) {
+                            continue;
+                        }
+                        match serde_json::from_str::<PrivateResponse>(&content) {
+                            Ok(res) => callback(res),
+                            Err(e) => error!("Error: {}", e),
+                        }
+                    }
+                    Message::Binary(_) => {}
+                    Message::Ping(_) => {}
+                    Message::Pong(_) => {}
+                    Message::Close(_) => break,
+                }
+            }
+        }
+        Ok(())
     }
 }
 
