@@ -389,7 +389,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: "trade".into(),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -400,7 +400,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: "realtimes".into(),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -411,7 +411,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: format!("kline_{}", kline_type),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -422,7 +422,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: "depth".into(),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -438,7 +438,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: "mergedDepth".into(),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: MergedDepthParams { binary, dump_scale },
         };
         self.subscriptions
@@ -449,7 +449,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: "diffDepth".into(),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -460,7 +460,7 @@ impl PublicWebSocketApiClient {
         let subscription = Subscription {
             topic: "lt".into(),
             event: "sub".into(),
-            symbol: symbol.as_ref().to_string(),
+            symbol: symbol.as_ref().to_owned(),
             params: CommonParams { binary },
         };
         self.subscriptions
@@ -551,7 +551,7 @@ impl PublicV2WebSocketApiClient {
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.as_ref().to_string(),
+                symbol: symbol.as_ref().to_owned(),
             },
         };
         self.subscriptions
@@ -564,7 +564,7 @@ impl PublicV2WebSocketApiClient {
             event: "sub".into(),
             params: KlineParamsV2 {
                 binary,
-                symbol: symbol.as_ref().to_string(),
+                symbol: symbol.as_ref().to_owned(),
                 kline_type: kline_type.to_string(),
             },
         };
@@ -578,7 +578,7 @@ impl PublicV2WebSocketApiClient {
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.as_ref().to_string(),
+                symbol: symbol.as_ref().to_owned(),
             },
         };
         self.subscriptions
@@ -591,7 +591,7 @@ impl PublicV2WebSocketApiClient {
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.as_ref().to_string(),
+                symbol: symbol.as_ref().to_owned(),
             },
         };
         self.subscriptions
@@ -604,7 +604,7 @@ impl PublicV2WebSocketApiClient {
             event: "sub".into(),
             params: CommonParamsV2 {
                 binary,
-                symbol: symbol.as_ref().to_string(),
+                symbol: symbol.as_ref().to_owned(),
             },
         };
         self.subscriptions
