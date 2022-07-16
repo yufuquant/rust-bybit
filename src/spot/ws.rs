@@ -76,7 +76,7 @@ pub struct Kline<'a> {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct OrderBookItem<'a>(&'a str, &'a str);
+pub struct OrderBookItem<'a>(pub &'a str, pub &'a str);
 
 #[derive(Deserialize, Debug)]
 pub struct Depth<'a> {
@@ -462,7 +462,7 @@ impl PublicWebSocketApiClient {
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn run<Callback: Fn(PublicResponse)>(&self, callback: Callback) -> Result<()> {
+    pub fn run<Callback: FnMut(PublicResponse)>(&self, mut callback: Callback) -> Result<()> {
         let req = Url::parse(&self.uri).unwrap();
         let (mut ws, _) = connect(req).expect("Can't connect");
 
@@ -606,7 +606,7 @@ impl PublicV2WebSocketApiClient {
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn run<Callback: Fn(PublicV2Response)>(&self, callback: Callback) -> Result<()> {
+    pub fn run<Callback: FnMut(PublicV2Response)>(&self, mut callback: Callback) -> Result<()> {
         let req = Url::parse(&self.uri).unwrap();
         let (mut ws, _) = connect(req).expect("Can't connect");
 
@@ -664,7 +664,7 @@ impl PrivateWebSocketApiClient {
         }
     }
 
-    pub fn run<Callback: Fn(PrivateResponse)>(&self, callback: Callback) -> Result<()> {
+    pub fn run<Callback: FnMut(PrivateResponse)>(&self, mut callback: Callback) -> Result<()> {
         let req = Url::parse(&self.uri)?;
         let (mut ws, _) = connect(req)?;
 
