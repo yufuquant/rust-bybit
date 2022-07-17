@@ -451,32 +451,32 @@ impl PublicWebSocketApiClient {
         };
     }
 
-    pub fn subscribe_order_book_l2_25(&mut self, symbols: &Vec<String>) {
+    pub fn subscribe_order_book_l2_25<S: AsRef<str>>(&mut self, symbols: &[S]) {
         self.subscribe("orderBookL2_25", symbols);
     }
 
-    pub fn subscribe_order_book_l2_200(&mut self, symbols: &Vec<String>) {
+    pub fn subscribe_order_book_l2_200<S: AsRef<str>>(&mut self, symbols: &[S]) {
         self.subscribe("orderBook_200.100ms", symbols);
     }
 
-    pub fn subscribe_trade(&mut self, symbols: &Vec<String>) {
+    pub fn subscribe_trade<S: AsRef<str>>(&mut self, symbols: &[S]) {
         self.subscribe("trade", symbols);
     }
 
-    pub fn subscribe_insurance(&mut self, symbols: &Vec<String>) {
+    pub fn subscribe_insurance<S: AsRef<str>>(&mut self, symbols: &[S]) {
         self.subscribe("insurance", symbols);
     }
 
-    pub fn subscribe_instrument_info(&mut self, symbols: &Vec<String>) {
+    pub fn subscribe_instrument_info<S: AsRef<str>>(&mut self, symbols: &[S]) {
         self.subscribe("instrument_info.100ms", symbols);
     }
 
-    pub fn subscribe_kline(&mut self, symbols: &Vec<String>, interval: &str) {
+    pub fn subscribe_kline<S: AsRef<str>>(&mut self, symbols: &[S], interval: &str) {
         let topic = format!("klineV2.{}", interval);
         self.subscribe(&topic, symbols);
     }
 
-    pub fn subscribe_liquidation(&mut self, symbols: &Vec<String>) {
+    pub fn subscribe_liquidation<S: AsRef<str>>(&mut self, symbols: &[S]) {
         self.subscribe("liquidation", symbols);
     }
 
@@ -519,10 +519,13 @@ impl PublicWebSocketApiClient {
         Ok(())
     }
 
-    fn subscribe(&mut self, topic: &str, symbols: &Vec<String>) {
+    fn subscribe<S>(&mut self, topic: &str, symbols: &[S])
+    where
+        S: AsRef<str>,
+    {
         let args = symbols
             .iter()
-            .map(|symbol| format!("{}.{}", topic, symbol))
+            .map(|symbol| format!("{}.{}", topic, symbol.as_ref()))
             .collect();
         let subscription = Subscription {
             op: "subscribe".into(),
