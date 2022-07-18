@@ -11,7 +11,7 @@ use url::Url;
 
 #[derive(Deserialize, Debug)]
 pub struct PingRequest<'a> {
-    op: &'a str,
+    pub op: &'a str,
 }
 
 /// Also handles subscription-acknowledgment messages
@@ -596,7 +596,8 @@ pub struct Position<'a> {
     /// Position sequence
     pub position_seq: u32,
     /// true means isolated margin mode; false means cross margin mode
-    pub Isolated: bool,
+    #[serde(alias = "Isolated")]
+    pub isolated: bool,
     /// Position mode
     pub mode: u32,
     /// 0-One-Way Mode, 1-Buy side of both side mode, 2-Sell side of both side mode (Perpetual)
