@@ -4,7 +4,7 @@ use std::io::{self, Write};
 struct OwnedOrderBookItem(String, String);
 
 fn main() {
-    let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/spot/quote/ws/v1");
+    let mut client = PublicWebSocketApiClient::new();
 
     client.subscribe_trade("BTCUSDT", false);
     client.subscribe_diff_depth("BTCUSDT", false);
