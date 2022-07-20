@@ -9,6 +9,13 @@ use std::time::Duration;
 use tungstenite::{connect, Message};
 use url::Url;
 
+const MAINNET_PUBLIC: &str = "wss://stream.bybit.com/spot/quote/ws/v1";
+const MAINNET_PUBLIC_V2: &str = "wss://stream.bybit.com/spot/quote/ws/v2";
+const MAINNET_PRIVATE: &str = "wss://stream.bybit.com/spot/ws";
+const TESTNET_PUBLIC: &str = "wss://stream-testnet.bybit.com/spot/quote/ws/v1";
+const TESTNET_PUBLIC_V2: &str = "wss://stream-testnet.bybit.com/spot/quote/ws/v2";
+const TESTNET_PRIVATE: &str = "wss://stream-testnet.bybit.com/spot/ws";
+
 #[derive(Deserialize, Debug)]
 pub struct Ping {
     pub ping: u64,
@@ -378,11 +385,12 @@ pub struct PublicWebSocketApiClient {
 }
 
 impl PublicWebSocketApiClient {
-    pub fn new(uri: &str) -> Self {
-        return PublicWebSocketApiClient {
-            uri: uri.to_string(),
-            subscriptions: Vec::new(),
-        };
+    pub fn new() -> Self {
+        Self::builder().build()
+    }
+
+    pub fn builder() -> PublicWebSocketApiClientBuilder {
+        PublicWebSocketApiClientBuilder::default()
     }
 
     pub fn subscribe_trade<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
@@ -504,6 +512,37 @@ impl PublicWebSocketApiClient {
     }
 }
 
+pub struct PublicWebSocketApiClientBuilder {
+    uri: String,
+}
+
+impl Default for PublicWebSocketApiClientBuilder {
+    fn default() -> Self {
+        Self {
+            uri: MAINNET_PUBLIC.to_string(),
+        }
+    }
+}
+
+impl PublicWebSocketApiClientBuilder {
+    pub fn testnet(mut self) -> Self {
+        self.uri = TESTNET_PUBLIC.to_string();
+        self
+    }
+
+    pub fn uri(mut self, uri: &str) -> Self {
+        self.uri = uri.to_string();
+        self
+    }
+
+    pub fn build(self) -> PublicWebSocketApiClient {
+        PublicWebSocketApiClient {
+            uri: self.uri,
+            subscriptions: Vec::new(),
+        }
+    }
+}
+
 #[derive(Serialize, Debug)]
 struct CommonParamsV2 {
     binary: bool,
@@ -538,11 +577,12 @@ pub struct PublicV2WebSocketApiClient {
 }
 
 impl PublicV2WebSocketApiClient {
-    pub fn new(uri: &str) -> Self {
-        return PublicV2WebSocketApiClient {
-            uri: uri.to_string(),
-            subscriptions: Vec::new(),
-        };
+    pub fn new() -> Self {
+        Self::builder().build()
+    }
+
+    pub fn builder() -> PublicV2WebSocketApiClientBuilder {
+        PublicV2WebSocketApiClientBuilder::default()
     }
 
     pub fn subscribe_depth<S: AsRef<str>>(&mut self, symbol: S, binary: bool) {
@@ -648,10 +688,35 @@ impl PublicV2WebSocketApiClient {
     }
 }
 
-pub struct PrivateWebSocketApiClient {
-    pub uri: String,
-    pub api_key: String,
-    pub secret: String,
+pub struct PublicV2WebSocketApiClientBuilder {
+    uri: String,
+}
+
+impl Default for PublicV2WebSocketApiClientBuilder {
+    fn default() -> Self {
+        Self {
+            uri: MAINNET_PUBLIC_V2.to_string(),
+        }
+    }
+}
+
+impl PublicV2WebSocketApiClientBuilder {
+    pub fn testnet(mut self) -> Self {
+        self.uri = TESTNET_PUBLIC_V2.to_string();
+        self
+    }
+
+    pub fn uri(mut self, uri: &str) -> Self {
+        self.uri = uri.to_string();
+        self
+    }
+
+    pub fn build(self) -> PublicV2WebSocketApiClient {
+        PublicV2WebSocketApiClient {
+            uri: self.uri,
+            subscriptions: Vec::new(),
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -660,13 +725,19 @@ struct AuthReq<'a> {
     args: [&'a str; 3],
 }
 
+pub struct PrivateWebSocketApiClient {
+    pub uri: String,
+    pub api_key: String,
+    pub secret: String,
+}
+
 impl PrivateWebSocketApiClient {
-    pub fn new(uri: &str, api_key: &str, secret: &str) -> Self {
-        Self {
-            uri: uri.to_string(),
-            api_key: api_key.to_string(),
-            secret: secret.to_string(),
-        }
+    pub fn new(api_key: &str, secret: &str) -> Self {
+        Self::builder().build_with_credentials(api_key, secret)
+    }
+
+    pub fn builder() -> PrivateWebSocketApiClientBuilder {
+        PrivateWebSocketApiClientBuilder::default()
     }
 
     pub fn run<Callback: FnMut(PrivateResponse)>(&self, mut callback: Callback) -> Result<()> {
@@ -721,4 +792,36 @@ fn spawn_ping_thread(tx: Sender<String>) {
             thread::sleep(s30);
         }
     });
+}
+
+pub struct PrivateWebSocketApiClientBuilder {
+    uri: String,
+}
+
+impl Default for PrivateWebSocketApiClientBuilder {
+    fn default() -> Self {
+        Self {
+            uri: MAINNET_PRIVATE.to_string(),
+        }
+    }
+}
+
+impl PrivateWebSocketApiClientBuilder {
+    pub fn testnet(mut self) -> Self {
+        self.uri = TESTNET_PRIVATE.to_string();
+        self
+    }
+
+    pub fn uri(mut self, uri: &str) -> Self {
+        self.uri = uri.to_string();
+        self
+    }
+
+    pub fn build_with_credentials(self, api_key: &str, secret: &str) -> PrivateWebSocketApiClient {
+        PrivateWebSocketApiClient {
+            uri: self.uri,
+            api_key: api_key.into(),
+            secret: secret.into(),
+        }
+    }
 }

@@ -3,7 +3,7 @@ use bybit::spot::ws::{PublicV2Response, PublicV2WebSocketApiClient};
 fn main() {
     env_logger::init();
 
-    let mut client = PublicV2WebSocketApiClient::new("wss://stream.bybit.com/spot/quote/ws/v2");
+    let mut client = PublicV2WebSocketApiClient::new();
 
     client.subscribe_depth("BTCUSDT", false);
     client.subscribe_kline("BTCUSDT", false, "1m");

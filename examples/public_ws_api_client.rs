@@ -3,7 +3,7 @@ use bybit::spot::ws::{PublicResponse, PublicWebSocketApiClient};
 fn main() {
     env_logger::init();
 
-    let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/spot/quote/ws/v1");
+    let mut client = PublicWebSocketApiClient::new();
 
     client.subscribe_trade("BTCUSDT", false);
     client.subscribe_realtimes("BTCUSDT", false);
