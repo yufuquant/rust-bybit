@@ -9,6 +9,9 @@ use std::time::Duration;
 use tungstenite::{connect, Message};
 use url::Url;
 
+const MAINNET: &str = "wss://stream.bybit.com/realtime";
+const TESTNET: &str = "wss://stream-testnet.bybit.com/realtime";
+
 #[derive(Deserialize, Debug)]
 pub struct PingRequest<'a> {
     pub op: &'a str,
@@ -443,12 +446,44 @@ struct Subscription {
     args: Vec<String>,
 }
 
-impl PublicWebSocketApiClient {
-    pub fn new(uri: &str) -> Self {
-        return PublicWebSocketApiClient {
-            uri: uri.to_string(),
+pub struct PublicWebSocketApiClientBuilder {
+    uri: String,
+}
+
+impl Default for PublicWebSocketApiClientBuilder {
+    fn default() -> Self {
+        Self {
+            uri: MAINNET.to_owned(),
+        }
+    }
+}
+
+impl PublicWebSocketApiClientBuilder {
+    pub fn testnet(mut self) -> Self {
+        self.uri = TESTNET.to_owned();
+        self
+    }
+
+    pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
+        self.uri = uri.as_ref().to_owned();
+        self
+    }
+
+    pub fn build(self) -> PublicWebSocketApiClient {
+        PublicWebSocketApiClient {
+            uri: self.uri,
             subscriptions: Vec::new(),
-        };
+        }
+    }
+}
+
+impl PublicWebSocketApiClient {
+    pub fn new() -> Self {
+        Self::builder().build()
+    }
+
+    pub fn builder() -> PublicWebSocketApiClientBuilder {
+        PublicWebSocketApiClientBuilder::default()
     }
 
     pub fn subscribe_order_book_l2_25<S: AsRef<str>>(&mut self, symbols: &[S]) {
@@ -776,6 +811,43 @@ struct AuthReq<'a> {
     args: [&'a str; 3],
 }
 
+pub struct PrivateWebSocketApiClientBuilder {
+    uri: String,
+}
+
+impl Default for PrivateWebSocketApiClientBuilder {
+    fn default() -> Self {
+        Self {
+            uri: MAINNET.to_owned(),
+        }
+    }
+}
+
+impl PrivateWebSocketApiClientBuilder {
+    pub fn testnet(mut self) -> Self {
+        self.uri = TESTNET.to_owned();
+        self
+    }
+
+    pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
+        self.uri = uri.as_ref().to_owned();
+        self
+    }
+
+    pub fn build_with_credentials<S: AsRef<str>>(
+        self,
+        api_key: S,
+        secret: S,
+    ) -> PrivateWebSocketApiClient {
+        PrivateWebSocketApiClient {
+            uri: self.uri,
+            subscriptions: Vec::new(),
+            api_key: api_key.as_ref().to_owned(),
+            secret: secret.as_ref().to_owned(),
+        }
+    }
+}
+
 pub struct PrivateWebSocketApiClient {
     pub uri: String,
     pub api_key: String,
@@ -784,13 +856,13 @@ pub struct PrivateWebSocketApiClient {
 }
 
 impl PrivateWebSocketApiClient {
-    pub fn new(uri: &str, api_key: &str, secret: &str) -> Self {
-        Self {
-            uri: uri.to_string(),
-            api_key: api_key.to_string(),
-            secret: secret.to_string(),
-            subscriptions: Vec::new(),
-        }
+    pub fn new<S: AsRef<str>>(api_key: S, secret: S) -> Self {
+        Self::builder()
+            .build_with_credentials(api_key.as_ref().to_string(), secret.as_ref().to_string())
+    }
+
+    pub fn builder() -> PrivateWebSocketApiClientBuilder {
+        PrivateWebSocketApiClientBuilder::default()
     }
 
     pub fn subscribe_position(&mut self) {
