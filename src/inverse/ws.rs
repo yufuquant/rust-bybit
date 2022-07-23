@@ -53,6 +53,36 @@ pub enum PositionSide {
     None,
 }
 
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
+pub enum OrderStatus {
+    /// Order has been accepted by the system but not yet put through the matching engine.
+    Created,
+    /// Order has been placed successfully.
+    New,
+    Rejected,
+    PartiallyFilled,
+    Filled,
+    /// Matching engine has received the cancelation request but it may not be canceled successfully.
+    PendingCancel,
+    Cancelled,
+    /// Order yet to be triggered.
+    ///
+    /// Note: only applies to conditional orders.
+    Untriggered,
+    /// Order has been canceled by the user before being triggered
+    ///
+    /// Note: only applies to conditional orders.
+    Deactivated,
+    /// Order has been triggered by last traded price
+    ///
+    /// Note: only applies to conditional orders.
+    Triggered,
+    /// Order has been triggered and the new active order has been successfully placed. Is the final state of a successful conditional order
+    ///
+    /// Note: only applies to conditional orders.
+    Active,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Response<'a, D> {
     pub topic: &'a str,
@@ -739,7 +769,7 @@ pub struct Order<'a> {
     /// Trigger scenario for cancel operation
     pub cancel_type: &'a str,
     /// Order status
-    pub order_status: &'a str,
+    pub order_status: OrderStatus,
     /// Number of unfilled contracts from the order's size
     pub leaves_qty: u32,
     /// Cumulative qty of trading
