@@ -530,8 +530,8 @@ impl PublicWebSocketApiClientBuilder {
         self
     }
 
-    pub fn uri(mut self, uri: &str) -> Self {
-        self.uri = uri.to_string();
+    pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
+        self.uri = uri.as_ref().to_string();
         self
     }
 
@@ -706,8 +706,8 @@ impl PublicV2WebSocketApiClientBuilder {
         self
     }
 
-    pub fn uri(mut self, uri: &str) -> Self {
-        self.uri = uri.to_string();
+    pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
+        self.uri = uri.as_ref().to_string();
         self
     }
 
@@ -732,8 +732,9 @@ pub struct PrivateWebSocketApiClient {
 }
 
 impl PrivateWebSocketApiClient {
-    pub fn new(api_key: &str, secret: &str) -> Self {
-        Self::builder().build_with_credentials(api_key, secret)
+    pub fn new<S: AsRef<str>>(api_key: S, secret: S) -> Self {
+        Self::builder()
+            .build_with_credentials(api_key.as_ref().to_owned(), secret.as_ref().to_owned())
     }
 
     pub fn builder() -> PrivateWebSocketApiClientBuilder {
@@ -812,16 +813,20 @@ impl PrivateWebSocketApiClientBuilder {
         self
     }
 
-    pub fn uri(mut self, uri: &str) -> Self {
-        self.uri = uri.to_string();
+    pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
+        self.uri = uri.as_ref().to_string();
         self
     }
 
-    pub fn build_with_credentials(self, api_key: &str, secret: &str) -> PrivateWebSocketApiClient {
+    pub fn build_with_credentials<S: AsRef<str>>(
+        self,
+        api_key: S,
+        secret: S,
+    ) -> PrivateWebSocketApiClient {
         PrivateWebSocketApiClient {
             uri: self.uri,
-            api_key: api_key.into(),
-            secret: secret.into(),
+            api_key: api_key.as_ref().to_owned(),
+            secret: secret.as_ref().to_owned(),
         }
     }
 }
