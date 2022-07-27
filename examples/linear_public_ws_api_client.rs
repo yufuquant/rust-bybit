@@ -3,7 +3,7 @@ use bybit::linear::{PublicResponse, PublicWebSocketApiClient};
 fn main() {
     env_logger::init();
 
-    let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/realtime_public");
+    let mut client = PublicWebSocketApiClient::new();
 
     let symbols = vec!["BTCUSDT", "ETHUSDT"];
     client.subscribe_order_book_l2_25(&symbols);

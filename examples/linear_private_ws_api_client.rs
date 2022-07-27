@@ -6,11 +6,7 @@ fn main() {
 
     let api_key: String = env::var("BYBIT_API_KEY").unwrap();
     let secret: String = env::var("BYBIT_SECRET").unwrap();
-    let mut client = PrivateWebSocketApiClient::new(
-        "wss://stream-testnet.bybit.com/realtime_private",
-        &api_key,
-        &secret,
-    );
+    let mut client = PrivateWebSocketApiClient::new(&api_key, &secret);
 
     client.subscribe_position();
     client.subscribe_execution();
