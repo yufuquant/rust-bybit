@@ -3,7 +3,7 @@ use bybit::inverse::{PublicResponse, PublicWebSocketApiClient};
 fn main() {
     env_logger::init();
 
-    let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/realtime");
+    let mut client = PublicWebSocketApiClient::new();
 
     let symbols = vec!["BTCUSD", "ETHUSDU22"];
     client.subscribe_order_book_l2_25(&symbols);
