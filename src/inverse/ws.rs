@@ -858,7 +858,7 @@ pub struct PrivateWebSocketApiClient {
 impl PrivateWebSocketApiClient {
     pub fn new<S: AsRef<str>>(api_key: S, secret: S) -> Self {
         Self::builder()
-            .build_with_credentials(api_key.as_ref().to_string(), secret.as_ref().to_string())
+            .build_with_credentials(api_key.as_ref().to_owned(), secret.as_ref().to_owned())
     }
 
     pub fn builder() -> PrivateWebSocketApiClientBuilder {
