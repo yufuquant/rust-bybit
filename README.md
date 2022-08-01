@@ -60,7 +60,7 @@ match client.run(callback) {
 }
 ```
 
-See [examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) for more details.
+This is a simple example to just print the received WebSocket responses. There are some more complex [examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) for real usage demonstration, such as maintaining a local order book by subscribing [diffDepth topic](https://bybit-exchange.github.io/docs/zh-cn/spot/#t-websocketmergeddepth). You can run `cargo run --example spot_local_order_book` to see how it works.
 
 ## Donate
 
