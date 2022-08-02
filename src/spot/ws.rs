@@ -531,7 +531,7 @@ impl PublicWebSocketApiClientBuilder {
     }
 
     pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
-        self.uri = uri.as_ref().to_string();
+        self.uri = uri.as_ref().to_owned();
         self
     }
 
@@ -598,14 +598,14 @@ impl PublicV2WebSocketApiClient {
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn subscribe_kline<S: AsRef<str>>(&mut self, symbol: S, binary: bool, kline_type: &str) {
+    pub fn subscribe_kline<S: AsRef<str>>(&mut self, symbol: S, binary: bool, kline_type: S) {
         let subscription = SubscriptionV2 {
             topic: "kline".into(),
             event: "sub".into(),
             params: KlineParamsV2 {
                 binary,
                 symbol: symbol.as_ref().to_owned(),
-                kline_type: kline_type.to_string(),
+                kline_type: kline_type.as_ref().to_owned(),
             },
         };
         self.subscriptions
@@ -707,7 +707,7 @@ impl PublicV2WebSocketApiClientBuilder {
     }
 
     pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
-        self.uri = uri.as_ref().to_string();
+        self.uri = uri.as_ref().to_owned();
         self
     }
 
@@ -814,7 +814,7 @@ impl PrivateWebSocketApiClientBuilder {
     }
 
     pub fn uri<S: AsRef<str>>(mut self, uri: S) -> Self {
-        self.uri = uri.as_ref().to_string();
+        self.uri = uri.as_ref().to_owned();
         self
     }
 
