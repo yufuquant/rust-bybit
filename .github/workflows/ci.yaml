@@ -17,12 +17,12 @@ jobs:
         triple:
           - {
               os: "ubuntu-latest",
-              target: "x86_64-unknown-linux",
+              target: "x86_64-unknown-linux-gnu",
               cross: false,
             }
           - {
               os: "ubuntu-latest",
-              target: "i686-unknown-linux",
+              target: "i686-unknown-linux-gnu",
               cross: true,
             }
           - {
