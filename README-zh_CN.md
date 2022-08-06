@@ -1,5 +1,9 @@
 # rust-bybit
 
+[![Build Status]](https://github.com/yufuquant/rust-bybit/actions/workflows/ci.yaml)
+
+[build status]: https://github.com/yufuquant/rust-bybit/actions/workflows/ci.yaml/badge.svg?branch=main
+
 [English](./README.md) | 简体中文
 
 Rust 实现的 Bybit WebSocket 行情和交易接口**非官方** SDK。
