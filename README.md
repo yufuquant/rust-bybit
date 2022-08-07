@@ -1,5 +1,9 @@
 # rust-bybit
 
+[![Build Status]](https://github.com/yufuquant/rust-bybit/actions/workflows/ci.yaml)
+
+[build status]: https://github.com/yufuquant/rust-bybit/actions/workflows/ci.yaml/badge.svg?branch=main
+
 English | [简体中文](README-zh_CN.md)
 
 Unofficial Rust API connector for Bybit's WebSockets APIs.
