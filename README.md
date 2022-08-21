@@ -6,11 +6,15 @@
 
 English | [简体中文](README-zh_CN.md)
 
-Unofficial Rust API connector for Bybit's WebSockets APIs.
+An unopinionated, unofficial Rust API connector for Bybit's WebSocket APIs.
 
 ## Disclaimer
 
 This is an **unofficial** Rust API connector for Bybit's APIs and the user assumes all responsibility and risk for the use of this project.
+
+## Project Goals
+
+This library's chief concern is performance. It assumes nothing about your use-case, and so makes no modification of values received from Bybit.
 
 ## Installation
 
