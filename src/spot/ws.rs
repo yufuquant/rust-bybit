@@ -1,13 +1,10 @@
+use crate::callback::{Callback, On};
 use crate::error::Result;
-use crate::util::*;
-use log::*;
+use crate::spot_ping;
+use crate::{run, Credentials};
+
 use serde::{Deserialize, Serialize};
 use serde_json;
-use std::sync::mpsc::{self, Sender};
-use std::thread;
-use std::time::Duration;
-use tungstenite::{connect, Message};
-use url::Url;
 
 const MAINNET_PUBLIC: &str = "wss://stream.bybit.com/spot/quote/ws/v1";
 const MAINNET_PUBLIC_V2: &str = "wss://stream.bybit.com/spot/quote/ws/v2";
@@ -235,6 +232,11 @@ pub enum PublicV2Response<'a> {
     Ping(Ping),
 }
 
+pub struct OnPublicV2Response;
+impl<'a> On<'a> for OnPublicV2Response {
+    type Arg = PublicV2Response<'a>;
+}
+
 #[derive(Deserialize, Debug)]
 pub struct WalletBalanceChange<'a> {
     // coin name
@@ -359,6 +361,11 @@ pub enum PrivateResponse<'a> {
     Ping(Ping),
 }
 
+pub struct OnPrivateResponse;
+impl<'a> On<'a> for OnPrivateResponse {
+    type Arg = PrivateResponse<'a>;
+}
+
 #[derive(Serialize, Debug)]
 struct CommonParams {
     binary: bool,
@@ -380,8 +387,13 @@ struct Subscription<P> {
 }
 
 pub struct PublicWebSocketApiClient {
-    pub uri: String,
+    uri: String,
     subscriptions: Vec<String>,
+}
+
+pub struct OnPublicResponse;
+impl<'a> On<'a> for OnPublicResponse {
+    type Arg = PublicResponse<'a>;
 }
 
 impl PublicWebSocketApiClient {
@@ -475,40 +487,8 @@ impl PublicWebSocketApiClient {
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn run<Callback: FnMut(PublicResponse)>(&self, mut callback: Callback) -> Result<()> {
-        let req = Url::parse(&self.uri).unwrap();
-        let (mut ws, _) = connect(req).expect("Can't connect");
-
-        let (tx, rx) = mpsc::channel::<String>();
-        spawn_ping_thread(tx);
-
-        for subscription in &self.subscriptions {
-            ws.write_message(Message::Text(subscription.clone()))
-                .unwrap();
-        }
-
-        loop {
-            if let Ok(ping) = rx.try_recv() {
-                ws.write_message(Message::Text(ping)).unwrap();
-            }
-
-            if let Ok(msg) = ws.read_message() {
-                match msg {
-                    Message::Text(content) => {
-                        debug!("Received: {}", content);
-                        match serde_json::from_str::<PublicResponse>(&content) {
-                            Ok(res) => callback(res),
-                            Err(e) => error!("Error: {}", e),
-                        }
-                    }
-                    Message::Binary(_) => {}
-                    Message::Ping(_) => {}
-                    Message::Pong(_) => {}
-                    Message::Close(_) => break,
-                }
-            }
-        }
-        Ok(())
+    pub fn run<T: Callback<OnPublicResponse>>(&self, callback: T) -> Result<()> {
+        run(&self.uri, None, &self.subscriptions, spot_ping, callback)
     }
 }
 
@@ -651,40 +631,8 @@ impl PublicV2WebSocketApiClient {
             .push(serde_json::to_string(&subscription).unwrap());
     }
 
-    pub fn run<Callback: FnMut(PublicV2Response)>(&self, mut callback: Callback) -> Result<()> {
-        let req = Url::parse(&self.uri).unwrap();
-        let (mut ws, _) = connect(req).expect("Can't connect");
-
-        let (tx, rx) = mpsc::channel::<String>();
-        spawn_ping_thread(tx);
-
-        for subscription in &self.subscriptions {
-            ws.write_message(Message::Text(subscription.clone()))
-                .unwrap();
-        }
-
-        loop {
-            if let Ok(ping) = rx.try_recv() {
-                ws.write_message(Message::Text(ping)).unwrap();
-            }
-
-            if let Ok(msg) = ws.read_message() {
-                match msg {
-                    Message::Text(content) => {
-                        debug!("Received: {}", content);
-                        match serde_json::from_str::<PublicV2Response>(&content) {
-                            Ok(res) => callback(res),
-                            Err(e) => error!("Error: {}", e),
-                        }
-                    }
-                    Message::Binary(_) => {}
-                    Message::Ping(_) => {}
-                    Message::Pong(_) => {}
-                    Message::Close(_) => break,
-                }
-            }
-        }
-        Ok(())
+    pub fn run<T: Callback<OnPublicV2Response>>(&self, callback: T) -> Result<()> {
+        run(&self.uri, None, &self.subscriptions, spot_ping, callback)
     }
 }
 
@@ -741,58 +689,19 @@ impl PrivateWebSocketApiClient {
         PrivateWebSocketApiClientBuilder::default()
     }
 
-    pub fn run<Callback: FnMut(PrivateResponse)>(&self, mut callback: Callback) -> Result<()> {
-        let req = Url::parse(&self.uri)?;
-        let (mut ws, _) = connect(req)?;
-
-        let (tx, rx) = mpsc::channel::<String>();
-        spawn_ping_thread(tx);
-
-        // authentication
-        let expires = millseconds()? + 10000;
-        let val = format!("GET/realtime{}", expires);
-        let signature = sign(&self.secret, &val);
-        let auth_req = AuthReq {
-            op: "auth",
-            args: [&self.api_key, &expires.to_string(), &signature],
+    pub fn run<T: Callback<OnPrivateResponse>>(&self, callback: T) -> Result<()> {
+        let credentials = Credentials {
+            api_key: self.api_key.clone(),
+            secret: self.secret.clone(),
         };
-        ws.write_message(Message::Text(serde_json::to_string(&auth_req)?))?;
-
-        loop {
-            if let Ok(ping) = rx.try_recv() {
-                ws.write_message(Message::Text(ping)).unwrap();
-            }
-
-            if let Ok(msg) = ws.read_message() {
-                match msg {
-                    Message::Text(content) => {
-                        debug!("Received: {}", content);
-                        match serde_json::from_str::<PrivateResponse>(&content) {
-                            Ok(res) => callback(res),
-                            Err(e) => error!("{}", e),
-                        }
-                    }
-                    Message::Binary(_) => {}
-                    Message::Ping(_) => {}
-                    Message::Pong(_) => {}
-                    Message::Close(_) => break,
-                }
-            }
-        }
-        Ok(())
+        run(
+            &self.uri,
+            Some(&credentials),
+            &Vec::new(),
+            spot_ping,
+            callback,
+        )
     }
-}
-
-fn spawn_ping_thread(tx: Sender<String>) {
-    thread::spawn(move || {
-        let s30 = Duration::from_secs(30);
-        loop {
-            if let Ok(ts) = millseconds() {
-                tx.send(format!("{{\"ping\":{}}}", ts)).unwrap();
-            }
-            thread::sleep(s30);
-        }
-    });
 }
 
 pub struct PrivateWebSocketApiClientBuilder {
