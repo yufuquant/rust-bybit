@@ -12,7 +12,6 @@ use log::*;
 use reqwest::Url;
 use serde::Serialize;
 use std::sync::mpsc::Receiver;
-use std::sync::Arc;
 use std::{sync::mpsc, thread, time::Duration};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{connect, Message};
@@ -48,11 +47,11 @@ where
     match ws.get_mut() {
         MaybeTlsStream::NativeTls(t) => {
             t.get_mut()
-                .set_read_timeout(Some(Duration::from_secs(15)))
+                .set_read_timeout(Some(Duration::from_secs(5)))
                 .expect("Error: cannot set read-timeout to underlying stream");
         }
         MaybeTlsStream::Plain(s) => {
-            s.set_read_timeout(Some(Duration::from_secs(15)))
+            s.set_read_timeout(Some(Duration::from_secs(5)))
                 .expect("Error: cannot set read-timeout to underlying stream");
         }
         _ => panic!("Error: it is not TlsStream"),
