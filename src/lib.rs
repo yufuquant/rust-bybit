@@ -13,6 +13,7 @@ use reqwest::Url;
 use serde::Serialize;
 use std::sync::mpsc::Receiver;
 use std::{sync::mpsc, thread, time::Duration};
+use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{connect, Message};
 
 use crate::error::Result;
@@ -43,6 +44,18 @@ where
 {
     let req = Url::parse(uri)?;
     let (mut ws, _) = connect(req)?;
+    match ws.get_mut() {
+        MaybeTlsStream::NativeTls(t) => {
+            t.get_mut()
+                .set_read_timeout(Some(Duration::from_secs(5)))
+                .expect("Error: cannot set read-timeout to underlying stream");
+        }
+        MaybeTlsStream::Plain(s) => {
+            s.set_read_timeout(Some(Duration::from_secs(5)))
+                .expect("Error: cannot set read-timeout to underlying stream");
+        }
+        _ => panic!("Error: it is not TlsStream"),
+    }
 
     let rx = ping_fn();
 
@@ -89,12 +102,12 @@ where
 fn spot_ping() -> Receiver<String> {
     let (tx, rx) = mpsc::channel::<String>();
     thread::spawn(move || {
-        let s30 = Duration::from_secs(30);
+        let s20 = Duration::from_secs(20);
         loop {
             if let Ok(ts) = millseconds() {
                 tx.send(format!("{{\"ping\":{}}}", ts)).unwrap();
             }
-            thread::sleep(s30);
+            thread::sleep(s20);
         }
     });
     rx
@@ -103,10 +116,10 @@ fn spot_ping() -> Receiver<String> {
 fn future_ping() -> Receiver<String> {
     let (tx, rx) = mpsc::channel::<String>();
     thread::spawn(move || {
-        let s30 = Duration::from_secs(30);
+        let s20 = Duration::from_secs(20);
         loop {
             tx.send("{\"op\":\"ping\"}".into()).unwrap();
-            thread::sleep(s30);
+            thread::sleep(s20);
         }
     });
     rx
