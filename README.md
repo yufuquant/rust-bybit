@@ -6,7 +6,7 @@
 
 English | [简体中文](README-zh_CN.md)
 
-Unofficial Rust API connector for Bybit's WebSockets APIs.
+Unofficial Rust API connector for Bybit's WebSockets V5 APIs.
 
 ## Disclaimer
 
@@ -23,39 +23,44 @@ rust-bybit = { git = "https://github.com/yufuquant/rust-bybit.git" }
 
 ## Basic Usage
 
-Create a WebSocket client for specific topics:
+Create a WebSocket client for specific channel:
 
 ```rust
-use bybit::spot::ws::{PublicResponse, PublicWebSocketApiClient};
+use bybit::ws::response::SpotPublicResponse;
+use bybit::ws::spot;
+use bybit::KlineInterval;
+use bybit::WebSocketApiClient;
 
-let mut client = PublicWebSocketApiClient::new("wss://stream.bybit.com/spot/quote/ws/v1");
+let mut client = WebSocketApiClient::spot().build();
 ```
 
-Subscribe to topics you are interested in. The following code will subscribe to all topics with symbol=BTCUSDT and binary=false (for all available topics, check [Bybit APIs documentation](https://bybit-exchange.github.io/docs/spot/)). Note that the subscriptions will not be sent until `client.run` is called:
+Subscribe to topics you are interested in. The following code will subscribe to all topics with symbol=BTCUSDT, or symbol=BTC3SUSDT for leveraged token (for all available topics, please check [Bybit V5 API](https://bybit-exchange.github.io/docs/v5/intro)). Note that the subscriptions will not be sent until `client.run` is called:
 
 ```rust
-client.subscribe_trade("BTCUSDT", false);
-client.subscribe_realtimes("BTCUSDT", false);
-client.subscribe_kline("BTCUSDT", "1m", false);
-client.subscribe_depth("BTCUSDT", false);
-client.subscribe_merged_depth("BTCUSDT", false, 1);
-client.subscribe_diff_depth("BTCUSDT", false);
-client.subscribe_lt("BTC3LUSDTNAV", false);
+let symbol = "ETHUSDT";
+let lt_symbol = "BTC3SUSDT";
+
+client.subscribe_orderbook(symbol, spot::OrderbookDepth::Level1);
+client.subscribe_orderbook(symbol, spot::OrderbookDepth::Level50);
+client.subscribe_trade(symbol);
+client.subscribe_ticker(symbol);
+client.subscribe_kline(symbol, KlineInterval::Min1);
+client.subscribe_lt_kline(lt_symbol, KlineInterval::Min5);
+client.subscribe_lt_ticker(lt_symbol);
+client.subscribe_lt_nav(lt_symbol);
 ```
 
-Pass a callback to `client.run` to start the client. The callback must accept exactly one parameter: the `Enum` which variants are WebSocket responses. The callback will be called whenever a WebSocket response is received:
+Pass a callback function to `client.run` to start the client. The callback must accept exactly one parameter: the `Enum` which variants are WebSocket responses. The callback function will be called whenever a WebSocket response is received:
 
 ```rust
-let callback = |res: PublicResponse| match res {
-    PublicResponse::Trade(res) => println!("Trade: {:?}", res),
-    PublicResponse::Realtimes(res) => println!("Realtimes: {:?}", res),
-    PublicResponse::Kline(res) => println!("Kline: {:?}", res),
-    PublicResponse::Depth(res) => println!("Depth: {:?}", res),
-    PublicResponse::MergedDepth(res) => println!("Merged depth: {:?}", res),
-    PublicResponse::DiffDepth(res) => println!("Diff depth: {:?}", res),
-    PublicResponse::LT(res) => println!("LT: {:?}", res),
-    PublicResponse::Pong(res) => println!("Pong: {:?}", res),
-    PublicResponse::Ping(res) => println!("Ping: {:?}", res),
+let callback = |res: SpotPublicResponse| match res {
+    SpotPublicResponse::Orderbook(res) => println!("Orderbook: {:?}", res),
+    SpotPublicResponse::Trade(res) => println!("Trade: {:?}", res),
+    SpotPublicResponse::Ticker(res) => println!("Ticker: {:?}", res),
+    SpotPublicResponse::Kline(res) => println!("Kline: {:?}", res),
+    SpotPublicResponse::LtTicker(res) => println!("LtTicker: {:?}", res),
+    SpotPublicResponse::LtNav(res) => println!("LtNav: {:?}", res),
+    SpotPublicResponse::Op(res) => println!("Op: {:?}", res),
 };
 
 match client.run(callback) {
@@ -64,7 +69,7 @@ match client.run(callback) {
 }
 ```
 
-This is a simple example to just print the received WebSocket responses. There are some more complex [examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) for real usage demonstration, such as maintaining a local order book by subscribing [diffDepth topic](https://bybit-exchange.github.io/docs/zh-cn/spot/#t-websocketmergeddepth). You can run `cargo run --example spot_local_order_book` to see how it works.
+This is a simple example that just print the received WebSocket responses. There are some more complex [examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) for real usage demonstration, such as maintaining a local order book. You can run `cargo run --example local_order_book` to see how it works.
 
 ## Donate
 

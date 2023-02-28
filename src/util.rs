@@ -1,15 +1,14 @@
-use crate::error::Result;
 use hex;
 use ring::hmac;
 use std::time::SystemTime;
 
-#[inline]
-pub fn millseconds() -> Result<u128> {
-    let d = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
-    Ok(d.as_millis())
+pub fn millis() -> u128 {
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_millis()
 }
 
-#[inline]
 pub fn sign(secret: &str, msg: &str) -> String {
     let key = hmac::Key::new(hmac::HMAC_SHA256, secret.as_bytes());
     let tag = hmac::sign(&key, msg.as_bytes());
@@ -22,7 +21,7 @@ mod tests {
 
     #[test]
     fn test_millseconds() {
-        assert!(millseconds().unwrap() > 0);
+        assert!(millis() > 0);
     }
 
     #[test]
