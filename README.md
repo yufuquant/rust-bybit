@@ -18,7 +18,7 @@ Add this to Cargo.toml
 
 ```toml
 [dependencies]
-rust-bybit = { git = "https://github.com/yufuquant/rust-bybit.git" }
+rust-bybit = "0.2"
 ```
 
 ## Basic Usage

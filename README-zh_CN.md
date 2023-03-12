@@ -18,7 +18,7 @@ Rust 实现的 Bybit V5 版 WebSocket 行情和交易接口**非官方** SDK。
 
 ```toml
 [dependencies]
-rust-bybit = { git = "https://github.com/yufuquant/rust-bybit.git" }
+rust-bybit = "0.2"
 ```
 
 ## 基础用法
