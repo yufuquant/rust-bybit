@@ -125,7 +125,7 @@ fn main() {
         }
 
         write!(handle, "\x1B[2J\x1B[1;1H").unwrap();
-        write!(handle, "ETHUSDT/USDT\n\n").unwrap();
+        write!(handle, "ETH/USDT\n\n").unwrap();
         write!(handle, "{:<20} {:<20}\n", "Price(USDT)", "Quantity(ETH)").unwrap();
         let mut asks10 = asks.iter().take(10).collect::<Vec<_>>().clone();
         asks10.reverse();

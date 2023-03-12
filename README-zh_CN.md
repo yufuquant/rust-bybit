@@ -34,7 +34,7 @@ use bybit::WebSocketApiClient;
 let mut client = WebSocketApiClient::spot().build();
 ```
 
-订阅感兴趣的消息。例如下面的代码将订阅 BTCUSDT 交易对（杠杆代币为 BTC3SUSDT）的全部消息（关于有哪些消息类型可供订阅，请参考 [Bybit V5 API](https://bybit-exchange.github.io/docs/zh-TW/v5/intro)）。注意直到 `client.run` 被调用时才会发送订阅请求：
+订阅感兴趣的消息。例如下面的代码将订阅 ETHUSDT 交易对（杠杆代币为 BTC3SUSDT）的全部消息（关于有哪些消息类型可供订阅，请参考 [Bybit V5 API](https://bybit-exchange.github.io/docs/zh-TW/v5/intro)）。注意直到 `client.run` 被调用时才会发送订阅请求：
 
 ```rust
 let symbol = "ETHUSDT";
@@ -69,7 +69,7 @@ match client.run(callback) {
 }
 ```
 
-以上是一个简单打印接收到的 WebSocket 应答消息的例子。[examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) 中还有一些更为实际的例子可供参考，例如通过订阅 [Orderbook](https://bybit-exchange.github.io/docs/zh-TW/v5/websocket/public/orderbook) 维护一个本地订单薄。你可以运行 `cargo run --example local_order_book` 启动此示例程序，程序启动后将在终端实时显示 ETHUSDT 10 档订单薄行情。
+以上是一个简单打印接收到的 WebSocket 应答消息的例子。[examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) 中还有一些更为实际的例子可供参考，例如通过订阅 [Orderbook](https://bybit-exchange.github.io/docs/zh-TW/v5/websocket/public/orderbook) 维护一个本地订单薄。你可以运行 `cargo run --example local_orderbook` 启动此示例程序，程序启动后将在终端实时显示 ETHUSDT 10 档订单薄行情。
 
 ## 捐赠
 

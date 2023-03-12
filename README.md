@@ -34,7 +34,7 @@ use bybit::WebSocketApiClient;
 let mut client = WebSocketApiClient::spot().build();
 ```
 
-Subscribe to topics you are interested in. The following code will subscribe to all topics with symbol=BTCUSDT, or symbol=BTC3SUSDT for leveraged token (for all available topics, please check [Bybit V5 API](https://bybit-exchange.github.io/docs/v5/intro)). Note that the subscriptions will not be sent until `client.run` is called:
+Subscribe to topics you are interested in. The following code will subscribe to all topics with symbol=ETHUSDT, or symbol=BTC3SUSDT for leveraged token (for all available topics, please check [Bybit V5 API](https://bybit-exchange.github.io/docs/v5/intro)). Note that the subscriptions will not be sent until `client.run` is called:
 
 ```rust
 let symbol = "ETHUSDT";
@@ -69,7 +69,7 @@ match client.run(callback) {
 }
 ```
 
-This is a simple example that just print the received WebSocket responses. There are some more complex [examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) for real usage demonstration, such as maintaining a local order book. You can run `cargo run --example local_order_book` to see how it works.
+This is a simple example that just print the received WebSocket responses. There are some more complex [examples](https://github.com/yufuquant/rust-bybit/tree/main/examples) for real usage demonstration, such as maintaining a local order book. You can run `cargo run --example local_orderbook` to see how it works.
 
 ## Donate
 
