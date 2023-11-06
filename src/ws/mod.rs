@@ -9,6 +9,7 @@ use callback::Arg;
 use callback::Callback;
 use log::*;
 use serde::Serialize;
+use std::cmp;
 use std::net::TcpStream;
 use std::sync::mpsc::Receiver;
 use std::{sync::mpsc, thread, time::Duration};
@@ -161,7 +162,12 @@ where
     }
 
     // Subscribe
-    ws.write_message(Message::Text(subscription(topics)))?;
+    const SUBSCRIBE_BATCH_SIZE: usize = 10;
+    for i in (0..topics.len()).step_by(SUBSCRIBE_BATCH_SIZE) {
+        let after_last = cmp::min(i + SUBSCRIBE_BATCH_SIZE, topics.len());
+        let batch = &topics[i..after_last];
+        ws.write_message(Message::Text(subscription(batch)))?;
+    }
 
     let rx = ping();
     loop {
@@ -220,10 +226,10 @@ fn auth_req(credentials: &Credentials) -> String {
     serde_json::to_string(&auth_req).unwrap()
 }
 
-fn subscription(topics: &Vec<String>) -> String {
+fn subscription(topics: &[String]) -> String {
     let sub = Op {
         op: "subscribe",
-        args: topics.clone(),
+        args: topics.to_vec(),
     };
     serde_json::to_string(&sub).unwrap()
 }
